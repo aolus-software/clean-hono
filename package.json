@@ -4,6 +4,8 @@
 	"type": "module",
 	"private": true,
 	"scripts": {
+		"dev:api": "bun --watch apps/api/serve.ts",
+		"build:api": "bun build apps/api/serve.ts --outdir=dist/api --target=bun",
 		"lint": "eslint . --ext .ts,.tsx",
 		"lint:fix": "eslint . --ext .ts,.tsx --fix",
 		"format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
@@ -13,6 +15,7 @@
 		"@types/bun": "latest",
 		"@typescript-eslint/eslint-plugin": "^8.15.0",
 		"@typescript-eslint/parser": "^8.15.0",
+		"@types/node": "^24.7.2",
 		"eslint": "^9.15.0",
 		"eslint-config-prettier": "^9.1.0",
 		"eslint-plugin-prettier": "^5.2.1",
@@ -21,5 +24,9 @@
 	},
 	"peerDependencies": {
 		"typescript": "^5"
+	},
+	"dependencies": {
+		"dotenv": "^17.2.3",
+		"hono": "^4.9.11"
 	}
 }

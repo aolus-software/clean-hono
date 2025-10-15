@@ -3,7 +3,7 @@
 services:
   # clickhouse:
   #   image: clickhouse/clickhouse-server:23.12
-  #   container_name: elysia-clickhouse
+  #   container_name: hono-clickhouse
   #   hostname: clickhouse
   #   ports:
   #     - "8123:8123"
@@ -35,7 +35,7 @@ services:
 
   postgres:
     image: postgres:16
-    container_name: elysia-postgres
+    container_name: hono-postgres
     restart: unless-stopped
     environment:
       POSTGRES_DB: elysia_db
@@ -56,7 +56,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: elysia-redis
+    container_name: hono-redis
     restart: unless-stopped
     command: redis-server --appendonly yes --requirepass password123
     volumes:
@@ -75,7 +75,7 @@ services:
 
   # app:
   #   build: .
-  #   container_name: elysia-app
+  #   container_name: hono-app
   #   restart: unless-stopped
   #   environment:
   #     DATABASE_URL: postgres://postgres:postgres@postgres:5432/elysia_db

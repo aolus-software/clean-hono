@@ -32,7 +32,7 @@
 		"baseUrl": "." /* Specify the base directory to resolve non-relative module names. */,
 		"paths": {
 			"@app/*": ["apps/*"],
-			"@apis/*": ["apps/apis/*"],
+			"@api/*": ["apps/api/*"],
 			"@worker/*": ["apps/worker/*"],
 
 			"@packages/*": ["packages"],
@@ -62,10 +62,11 @@
 		},
 		/* Specify a set of entries that re-map imports to additional lookup locations. */ // "rootDirs": [],                                   /* Allow multiple folders to be treated as one when resolving modules. */
 		// "typeRoots": [],                                  /* Specify multiple folders that act like './node_modules/@types'. */
-		"types": [] /* Specify type package names to be included without being referenced in a source file. */,
+		"types": [
+			"node"
+		] /* Specify type package names to be included without being referenced in a source file. */,
 		"typeRoots": [
-			"./node_modules/@types",
-			"./apps/apis/types"
+			"./node_modules/@types"
 		] /* Specify multiple folders that act like './node_modules/@types'. */,
 		// "allowUmdGlobalAccess": true,                     /* Allow accessing UMD globals from modules. */
 		// "moduleSuffixes": [],                             /* List of file name suffixes to search when resolving a module. */
@@ -133,6 +134,6 @@
 		// "skipDefaultLibCheck": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */
 		"skipLibCheck": true /* Skip type checking all .d.ts files. */
 	},
-	"include": ["apps/**/*"],
+	"include": ["apps/**/*", "config/**/*", "infra/**/*", "packages/**/*"],
 	"exclude": ["node_modules", "dist"]
 }
