@@ -9,19 +9,23 @@
 		"lint": "eslint . --ext .ts,.tsx",
 		"lint:fix": "eslint . --ext .ts,.tsx --fix",
 		"format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
-		"format:check": "prettier --check \"**/*.{ts,tsx,json,md}\""
+		"format:check": "prettier --check \"**/*.{ts,tsx,json,md}\"",
+		"db:postgres:seed": "bun run ./infra/seed/index.ts"
 	},
 	"devDependencies": {
 		"@types/bcryptjs": "^3.0.0",
 		"@types/bun": "latest",
 		"@types/crypto-js": "^4.2.2",
 		"@types/node": "^24.7.2",
+		"@types/pg": "^8.15.5",
 		"@typescript-eslint/eslint-plugin": "^8.15.0",
 		"@typescript-eslint/parser": "^8.15.0",
+		"drizzle-kit": "^0.31.5",
 		"eslint": "^9.15.0",
 		"eslint-config-prettier": "^9.1.0",
 		"eslint-plugin-prettier": "^5.2.1",
 		"prettier": "^3.3.3",
+		"tsx": "^4.20.6",
 		"typescript-eslint": "^8.46.0"
 	},
 	"peerDependencies": {
@@ -33,9 +37,11 @@
 		"crypto-js": "^4.2.0",
 		"dayjs": "^1.11.18",
 		"dotenv": "^17.2.3",
+		"drizzle-orm": "^0.44.6",
 		"hono": "^4.9.11",
 		"hono-pino": "^0.10.3",
 		"ioredis": "^5.8.1",
+		"pg": "^8.16.3",
 		"pino": "^10.0.0"
 	}
 }
