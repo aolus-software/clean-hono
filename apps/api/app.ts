@@ -1,12 +1,19 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { logger } from "hono/logger";
 import { corsConfig } from "@config";
 import routes from "@api/routes";
+import { pinoLogger } from "hono-pino";
+import { logger } from "@packages";
 
 const app: Hono = new Hono();
 
-app.use("*", logger());
+app.use(
+	"*",
+	pinoLogger({
+		pino: logger,
+	}),
+);
+
 app.use(
 	"*",
 	cors({
