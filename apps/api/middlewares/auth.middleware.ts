@@ -15,30 +15,25 @@ export const authMiddleware: MiddlewareHandler = async (c, next) => {
 		throw new UnauthorizedError("No token provided");
 	}
 
-	try {
-		const payload = await new JWTToolkit().verify<{
-			userId: string;
-		}>(token);
-		if (!payload?.userId) {
-			throw new UnauthorizedError("Invalid token payload");
-		}
-
-		const cachekey = UserInformationCacheKey(payload.userId);
-		let user: UserInformation | null =
-			await Cache.get<UserInformation>(cachekey);
-		if (!user) {
-			const userRecord = await UserRepository().UserInformation(payload.userId);
-			if (!userRecord) {
-				throw new UnauthorizedError("User not found");
-			}
-
-			user = userRecord;
-			await Cache.set(cachekey, user);
-		}
-
-		c.set("currentUser", user);
-		return next();
-	} catch {
-		throw new UnauthorizedError("Invalid token");
+	const payload = await new JWTToolkit().verify<{
+		userId: string;
+	}>(token);
+	if (!payload?.userId) {
+		throw new UnauthorizedError("Invalid token payload");
 	}
+
+	const cachekey = UserInformationCacheKey(payload.userId);
+	let user: UserInformation | null = await Cache.get<UserInformation>(cachekey);
+	if (!user) {
+		const userRecord = await UserRepository().UserInformation(payload.userId);
+		if (!userRecord) {
+			throw new UnauthorizedError("User not found");
+		}
+
+		user = userRecord;
+		await Cache.set(cachekey, user);
+	}
+
+	c.set("currentUser", user);
+	return next();
 };

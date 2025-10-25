@@ -24,8 +24,8 @@ export class JWTToolkit {
 		try {
 			const payload = await verify(token, this.secret);
 			return payload as unknown as T;
-		} catch {
-			return null;
+		} catch (error) {
+			throw new Error("Invalid token", { cause: error });
 		}
 	}
 }
