@@ -4,6 +4,7 @@ import { corsConfig } from "@config";
 import routes from "@api/routes";
 import { pinoLogger } from "hono-pino";
 import { logger } from "@packages";
+import { registerException } from "@app/api/errors/index";
 
 const app: Hono = new Hono();
 
@@ -33,7 +34,7 @@ app.use("*", async (c, next) => {
 });
 
 // Error handling=====================================================
-// registerException(app);
+registerException(app);
 
 app.route("/", routes);
 

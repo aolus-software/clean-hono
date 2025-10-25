@@ -6,6 +6,7 @@ interface IAppConfig {
 	APP_TIMEZONE: string;
 	APP_KEY: string;
 	APP_JWT_SECRET: string;
+	APP_JWT_EXPIRES_IN: number;
 
 	// log
 	LOG_LEVEL: "info" | "warn" | "debug";
@@ -15,7 +16,7 @@ interface IAppConfig {
 }
 
 export const AppConfig: IAppConfig = {
-	APP_NAME: process.env.APP_NAME || "Elysia App",
+	APP_NAME: process.env.APP_NAME || "Hono App",
 	APP_PORT: Number(process.env.APP_PORT) || 3000,
 	APP_URL: process.env.APP_URL || "http://localhost:3000",
 	APP_ENV: (process.env.APP_ENV || "development") as
@@ -24,7 +25,9 @@ export const AppConfig: IAppConfig = {
 		| "production",
 	APP_TIMEZONE: process.env.APP_TIMEZONE || "UTC",
 	APP_KEY: process.env.APP_KEY || "your-app-key",
+
 	APP_JWT_SECRET: process.env.APP_JWT_SECRET || "jwt-secret",
+	APP_JWT_EXPIRES_IN: Number(process.env.APP_JWT_EXPIRES_IN) || 3600,
 
 	LOG_LEVEL: (process.env.LOG_LEVEL || "info") as "info" | "warn" | "debug",
 

@@ -66,7 +66,8 @@
 			"node"
 		] /* Specify type package names to be included without being referenced in a source file. */,
 		"typeRoots": [
-			"./node_modules/@types"
+			"./node_modules/@types",
+			"./apps/api/types"
 		] /* Specify multiple folders that act like './node_modules/@types'. */,
 		// "allowUmdGlobalAccess": true,                     /* Allow accessing UMD globals from modules. */
 		// "moduleSuffixes": [],                             /* List of file name suffixes to search when resolving a module. */
@@ -134,6 +135,12 @@
 		// "skipDefaultLibCheck": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */
 		"skipLibCheck": true /* Skip type checking all .d.ts files. */
 	},
-	"include": ["apps/**/*", "config/**/*", "infra/**/*", "packages/**/*"],
+	"include": [
+		"apps/**/*",
+		"config/**/*",
+		"infra/**/*",
+		"packages/**/*",
+		"drizzle.config.ts"
+	],
 	"exclude": ["node_modules", "dist"]
 }

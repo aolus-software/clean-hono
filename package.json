@@ -10,7 +10,8 @@
 		"lint:fix": "eslint . --ext .ts,.tsx --fix",
 		"format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
 		"format:check": "prettier --check \"**/*.{ts,tsx,json,md}\"",
-		"db:postgres:seed": "bun run ./infra/seed/index.ts"
+		"db:postgres:seed": "bun run ./infra/seed/index.ts",
+		"prepare": "husky"
 	},
 	"devDependencies": {
 		"@types/bcryptjs": "^3.0.0",
@@ -24,6 +25,7 @@
 		"eslint": "^9.15.0",
 		"eslint-config-prettier": "^9.1.0",
 		"eslint-plugin-prettier": "^5.2.1",
+		"husky": "^9.1.7",
 		"prettier": "^3.3.3",
 		"tsx": "^4.20.6",
 		"typescript-eslint": "^8.46.0"
@@ -32,6 +34,7 @@
 		"typescript": "^5"
 	},
 	"dependencies": {
+		"@vinejs/vine": "^4.0.1",
 		"bcryptjs": "^3.0.2",
 		"bullmq": "^5.61.0",
 		"crypto-js": "^4.2.0",

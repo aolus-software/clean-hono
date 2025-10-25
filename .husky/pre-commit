@@ -1,0 +1,6 @@
+make install
+make format
+make lint
+make db-generate
+make db-migrate
+make build-api
