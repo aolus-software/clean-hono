@@ -2,6 +2,8 @@ import { JWTToolkit } from "@toolkit/jwt";
 import { UnauthorizedError } from "../errors";
 import { UserRepository } from "../repositories";
 import { MiddlewareHandler } from "hono";
+import { Cache, UserInformationCacheKey } from "@cache/*";
+import { UserInformation } from "../types/UserInformation";
 
 export const authMiddleware: MiddlewareHandler = async (c, next) => {
 	const authHeader = c.req.header("authorization") || "";
@@ -21,8 +23,18 @@ export const authMiddleware: MiddlewareHandler = async (c, next) => {
 			throw new UnauthorizedError("Invalid token payload");
 		}
 
-		const user = await UserRepository().UserInformation(payload.userId);
-		if (!user) throw new UnauthorizedError("User not found");
+		const cachekey = UserInformationCacheKey(payload.userId);
+		let user: UserInformation | null =
+			await Cache.get<UserInformation>(cachekey);
+		if (!user) {
+			const userRecord = await UserRepository().UserInformation(payload.userId);
+			if (!userRecord) {
+				throw new UnauthorizedError("User not found");
+			}
+
+			user = userRecord;
+			await Cache.set(cachekey, user);
+		}
 
 		c.set("currentUser", user);
 		return next();

@@ -12,6 +12,7 @@ routes.get("/health", HomeHandler.getHealth);
 routes.post("/auth/login", AuthHandler.login);
 routes.post("/auth/register", AuthHandler.register);
 routes.post("/auth/verify-email", AuthHandler.verifyEmail);
+routes.post("/auth/resent-verification-email", AuthHandler.resendVerification);
 routes.post("/auth/forgot-password", AuthHandler.forgotPassword);
 routes.post("/auth/reset-password", AuthHandler.resetPassword);
 

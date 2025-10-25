@@ -81,7 +81,7 @@ services:
   #     DATABASE_URL: postgres://postgres:postgres@postgres:5432/elysia_db
   #     REDIS_HOST: redis
   #     REDIS_PORT: 6379
-  #     REDIS_PASSWORD: password123
+  #     REDIS_p: password123
   #     REDIS_DB: 0
   #     PORT: 3000
   #   ports:

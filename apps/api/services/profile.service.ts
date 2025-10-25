@@ -4,6 +4,7 @@ import { UserRepository } from "../repositories";
 import { UnprocessableEntityError } from "../errors";
 import { Hash } from "@security/hash";
 import { and, eq, ne } from "drizzle-orm";
+import { Cache, UserInformationCacheKey } from "@cache/*";
 
 export const ProfileService = {
 	updateProfile: async (
@@ -48,9 +49,9 @@ export const ProfileService = {
 			userInformation.id,
 		);
 
-		// const userCacheKey = UserInformationCacheKey(userInformation.id);
-		// await Cache.delete(userCacheKey);
-		// await Cache.set(userCacheKey, user, 60 * 60);
+		const userCacheKey = UserInformationCacheKey(userInformation.id);
+		await Cache.delete(userCacheKey);
+		await Cache.set(userCacheKey, user);
 
 		return user;
 	},

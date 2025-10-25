@@ -17,8 +17,12 @@ const AuthSchema = {
 		password: vine.string().regex(StrongPassword).confirmed(),
 	}),
 
+	resendVerificationSchema: vine.object({
+		email: vine.string().email().maxLength(255),
+	}),
+
 	emailVerificationSchema: vine.object({
-		token: vine.string().uuid(),
+		token: vine.string(),
 	}),
 
 	forgotPasswordSchema: vine.object({
@@ -26,8 +30,8 @@ const AuthSchema = {
 	}),
 
 	resetPasswordSchema: vine.object({
-		token: vine.string().uuid(),
-		newPassword: vine.string().regex(StrongPassword).confirmed(),
+		token: vine.string(),
+		password: vine.string().regex(StrongPassword).confirmed(),
 	}),
 };
 
@@ -69,15 +73,56 @@ export const AuthHandler = {
 		);
 	},
 
-	verifyEmail: (c: Context) => {
-		return ResponseToolkit.success(c, {}, "Verify email endpoint", 200);
+	resendVerification: async (c: Context) => {
+		const payload = await c.req.json();
+		const validation = await vine.validate({
+			schema: AuthSchema.resendVerificationSchema,
+			data: payload,
+		});
+
+		await authService.resendVerification(validation);
+
+		return ResponseToolkit.success(
+			c,
+			{},
+			"Verification email resent successfully",
+			200,
+		);
 	},
 
-	forgotPassword: (c: Context) => {
-		return ResponseToolkit.success(c, {}, "Forgot password endpoint", 200);
+	verifyEmail: async (c: Context) => {
+		const payload = await c.req.json();
+		const validation = await vine.validate({
+			schema: AuthSchema.emailVerificationSchema,
+			data: payload,
+		});
+
+		await authService.verifyEmail(validation);
+
+		return ResponseToolkit.success(c, {}, "Email verified successfully", 200);
 	},
 
-	resetPassword: (c: Context) => {
-		return ResponseToolkit.success(c, {}, "Reset password endpoint", 200);
+	forgotPassword: async (c: Context) => {
+		const payload = await c.req.json();
+		const validation = await vine.validate({
+			schema: AuthSchema.forgotPasswordSchema,
+			data: payload,
+		});
+
+		await authService.forgotPassword(validation.email);
+
+		return ResponseToolkit.success(c, {}, "Forgot password email sent", 200);
+	},
+
+	resetPassword: async (c: Context) => {
+		const payload = await c.req.json();
+		const validation = await vine.validate({
+			schema: AuthSchema.resetPasswordSchema,
+			data: payload,
+		});
+
+		await authService.resetPassword(validation.token, validation.password);
+
+		return ResponseToolkit.success(c, {}, "Password reset successfully", 200);
 	},
 };
