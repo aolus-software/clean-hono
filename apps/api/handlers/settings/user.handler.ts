@@ -66,13 +66,18 @@ export const UserHandler = {
 			data: payload,
 		});
 
-		await UserRepository().create({
-			name: validate.name,
-			email: validate.email,
-			password: validate.password,
-			status: validate.status || "active",
-			remark: validate.remark || undefined,
-			role_ids: validate.role_ids || [],
+		db.transaction(async (trx) => {
+			await UserRepository().create(
+				{
+					name: validate.name,
+					email: validate.email,
+					password: validate.password,
+					status: validate.status || "active",
+					remark: validate.remark || undefined,
+					role_ids: validate.role_ids || [],
+				},
+				trx,
+			);
 		});
 
 		return ResponseToolkit.success(ctx, {}, "User created successfully", 201);

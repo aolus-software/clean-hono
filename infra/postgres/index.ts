@@ -27,9 +27,9 @@ import {
 	user_rolesRelations,
 } from "./rbac";
 import { usersTable, usersRelations } from "./user";
-import { DatabaseConfig } from "@config";
+import { DatabaseConfig } from "config/database.config";
 
-const schema = {
+export const schema = {
 	// Tables
 	users: usersTable,
 	roles: rolesTable,

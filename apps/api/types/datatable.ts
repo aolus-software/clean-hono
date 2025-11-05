@@ -1,4 +1,4 @@
-import { SortDirection } from "./sortdirection";
+import { SortDirection } from "./sort-direction";
 
 export type DatatableType = {
 	page: number;
