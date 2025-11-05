@@ -8,17 +8,7 @@ A clean, production-ready starter template for building modern web applications 
 
 - **⚡ Hono Framework**: Fast, lightweight, and modern web framework for Bun
 - **🔷 TypeScript**: Full TypeScript support with strict configuration
-- **📦 Bun Runtime**: Lightning-fast JavaScript runtime and package manager
-
-## 🚧 TODO / Missing Features
-
-This section tracks unimplemented or planned features:
-
-- **ClickHouse Integration**: ClickHouse migration scripts are commented out in the Makefile; implement and enable them.
-- **Testing**: Add and document automated tests (unit, integration, e2e).
-- **Documentation**: Keep this README and code comments in sync with actual code features.
-
-If you contribute, please check this list and help complete these features!
+- **📦 Bun Runtime**: Lightning-fast JavaScript runtime and package managerk
 
 ### Architecture & Structure
 

@@ -72,30 +72,11 @@ format:
 db-seed:
 	bun run infra/seed/index.ts
 
-# migrate-clickhouse:
-# 	bun run infra/clickhouse/scripts/migrate.ts migrate
+migrate-clickhouse:
+	bun run infra/clickhouse/scripts/migrate.ts migrate
 
-# migrate-clickhouse-status:
-# 	bun run infra/clickhouse/scripts/migrate.ts status
-
-# Database commands
-# db-generate:
-# 	bunx drizzle-kit generate
-
-# db-migrate:
-# 	bunx drizzle-kit migrate
-
-# db-push:
-# 	bunx drizzle-kit push
-
-# db-pull:
-# 	bunx drizzle-kit introspect
-
-# db-studio:
-# 	bunx drizzle-kit studio
-
-# db-drop:
-# 	bunx drizzle-kit drop
+migrate-clickhouse-status:
+	bun run infra/clickhouse/scripts/migrate.ts status
 
 db-generate:
 	npx drizzle-kit generate

@@ -19,7 +19,9 @@
 		"dev:all": "concurrently --names \"server,worker\" --prefix-colors \"blue,magenta\" \"bun run dev:server\" \"bun run dev:worker\"",
 		"build:all": "concurrently --names \"server,worker\" --prefix-colors \"blue,magenta\" \"bun run build:server\" \"bun run build:worker\"",
 		"start:all": "concurrently --names \"server,worker\" --prefix-colors \"blue,magenta\" \"bun run start:server\" \"bun run start:worker\"",
-		"db:postgres:seed": "bun run ./infra/seed/index.ts"
+		"db:postgres:seed": "bun run ./infra/seed/index.ts",
+		"migrate:clickhouse": "bun run infra/clickhouse/scripts/migrate.ts migrate",
+		"migrate:clickhouse:status": "bun run infra/clickhouse/scripts/migrate.ts status"
 	},
 	"devDependencies": {
 		"@types/bcryptjs": "^3.0.0",
@@ -44,6 +46,7 @@
 		"typescript": "^5"
 	},
 	"dependencies": {
+		"@clickhouse/client": "^1.12.1",
 		"@vinejs/vine": "^4.0.1",
 		"bcryptjs": "^3.0.2",
 		"bullmq": "^5.61.0",

@@ -14,12 +14,18 @@ import { AppConfig } from "config/app.config";
 import { and, eq, isNull } from "drizzle-orm";
 import { sendEmailQueue } from "@app/worker/queue/send-email.queue";
 import { ForgotPasswordRepository } from "../repositories/forgot-password.repository";
+import { createUserActivitiesService } from "infra/clickhouse";
+
+const userActivitiesService = createUserActivitiesService();
 
 export const AuthService = {
-	login: async (payload: {
-		email: string;
-		password: string;
-	}): Promise<UserInformation> => {
+	login: async (
+		payload: {
+			email: string;
+			password: string;
+		},
+		context?: { ipAddress: string; userAgent: string },
+	): Promise<UserInformation> => {
 		const user = await UserRepository().findByEmail(payload.email);
 		if (!user) {
 			throw new UnprocessableEntityError("Invalid credentials", [
@@ -61,14 +67,30 @@ export const AuthService = {
 			]);
 		}
 
+		// Track login activity
+		await userActivitiesService.trackActivity({
+			user_id: user.id,
+			action: "login",
+			resource: "auth",
+			ip_address: context?.ipAddress || "",
+			user_agent: context?.userAgent || "",
+			metadata: {
+				email: user.email,
+				method: "password",
+			},
+		});
+
 		return await UserRepository().UserInformation(user.id);
 	},
 
-	register: async (payload: {
-		name: string;
-		email: string;
-		password: string;
-	}): Promise<void> => {
+	register: async (
+		payload: {
+			name: string;
+			email: string;
+			password: string;
+		},
+		context?: { ipAddress: string; userAgent: string },
+	): Promise<void> => {
 		const user = await UserRepository().db.query.users.findFirst({
 			where: and(
 				eq(usersTable.email, payload.email),
@@ -116,10 +138,26 @@ export const AuthService = {
 					verification_url: `${AppConfig.CLIENT_URL}/auth/verify-email?token=${token}`,
 				},
 			});
+
+			// Track registration activity
+			await userActivitiesService.trackActivity({
+				user_id: newUser[0].id,
+				action: "register",
+				resource: "user",
+				ip_address: context?.ipAddress || "",
+				user_agent: context?.userAgent || "",
+				metadata: {
+					email: payload.email,
+					name: payload.name,
+				},
+			});
 		});
 	},
 
-	resendVerification: async (payload: { email: string }): Promise<void> => {
+	resendVerification: async (
+		payload: { email: string },
+		context?: { ipAddress: string; userAgent: string },
+	): Promise<void> => {
 		const user = await UserRepository().findByEmail(payload.email);
 		if (!user) {
 			return;
@@ -153,10 +191,25 @@ export const AuthService = {
 					verification_url: `${AppConfig.CLIENT_URL}/auth/verify-email?token=${token}`,
 				},
 			});
+
+			// Track resend verification activity
+			await userActivitiesService.trackActivity({
+				user_id: user.id,
+				action: "resend_verification",
+				resource: "email_verification",
+				ip_address: context?.ipAddress || "",
+				user_agent: context?.userAgent || "",
+				metadata: {
+					email: payload.email,
+				},
+			});
 		});
 	},
 
-	verifyEmail: async (payload: { token: string }): Promise<void> => {
+	verifyEmail: async (
+		payload: { token: string },
+		context?: { ipAddress: string; userAgent: string },
+	): Promise<void> => {
 		const verificationRecord = await db
 			.select()
 			.from(email_verificationsTable)
@@ -182,10 +235,25 @@ export const AuthService = {
 			await trx
 				.delete(email_verificationsTable)
 				.where(eq(email_verificationsTable.id, verificationRecord.id));
+
+			// Track email verification activity
+			await userActivitiesService.trackActivity({
+				user_id: verificationRecord.user_id,
+				action: "verify_email",
+				resource: "email_verification",
+				ip_address: context?.ipAddress || "",
+				user_agent: context?.userAgent || "",
+				metadata: {
+					token_id: verificationRecord.id.toString(),
+				},
+			});
 		});
 	},
 
-	async forgotPassword(email: string): Promise<void> {
+	async forgotPassword(
+		email: string,
+		context?: { ipAddress: string; userAgent: string },
+	): Promise<void> {
 		const user = await UserRepository().db.query.users.findFirst({
 			where: eq(usersTable.email, email),
 		});
@@ -210,9 +278,25 @@ export const AuthService = {
 				reset_password_url: `${AppConfig.CLIENT_URL}/auth/reset-password?token=${token}`,
 			},
 		});
+
+		// Track forgot password activity
+		await userActivitiesService.trackActivity({
+			user_id: user.id,
+			action: "request_password_reset",
+			resource: "password_reset",
+			ip_address: context?.ipAddress || "",
+			user_agent: context?.userAgent || "",
+			metadata: {
+				email,
+			},
+		});
 	},
 
-	async resetPassword(token: string, newPassword: string): Promise<void> {
+	async resetPassword(
+		token: string,
+		newPassword: string,
+		context?: { ipAddress: string; userAgent: string },
+	): Promise<void> {
 		const passwordReset = await ForgotPasswordRepository().findByToken(token);
 		if (!passwordReset) {
 			throw new UnprocessableEntityError("Validation error", [
@@ -247,6 +331,18 @@ export const AuthService = {
 			await trx
 				.delete(password_reset_tokensTable)
 				.where(eq(password_reset_tokensTable.user_id, user.id));
+
+			// Track password reset activity
+			await userActivitiesService.trackActivity({
+				user_id: user.id,
+				action: "reset_password",
+				resource: "password_reset",
+				ip_address: context?.ipAddress || "",
+				user_agent: context?.userAgent || "",
+				metadata: {
+					token_id: passwordReset.id.toString(),
+				},
+			});
 		});
 	},
 };

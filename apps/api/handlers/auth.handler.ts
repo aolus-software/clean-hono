@@ -45,7 +45,11 @@ export const AuthHandler = {
 			data: payload,
 		});
 
-		const user = await authService.login(validation);
+		const ipAddress =
+			c.req.header("x-forwarded-for") || c.req.header("x-real-ip") || "unknown";
+		const userAgent = c.req.header("user-agent") || "unknown";
+
+		const user = await authService.login(validation, { ipAddress, userAgent });
 		const token = await new JWTToolkit().sign({ userId: user.id });
 
 		return ResponseToolkit.success(
@@ -63,7 +67,11 @@ export const AuthHandler = {
 			data: payload,
 		});
 
-		await authService.register(validation);
+		const ipAddress =
+			c.req.header("x-forwarded-for") || c.req.header("x-real-ip") || "unknown";
+		const userAgent = c.req.header("user-agent") || "unknown";
+
+		await authService.register(validation, { ipAddress, userAgent });
 
 		return ResponseToolkit.success(
 			c,
@@ -80,7 +88,11 @@ export const AuthHandler = {
 			data: payload,
 		});
 
-		await authService.resendVerification(validation);
+		const ipAddress =
+			c.req.header("x-forwarded-for") || c.req.header("x-real-ip") || "unknown";
+		const userAgent = c.req.header("user-agent") || "unknown";
+
+		await authService.resendVerification(validation, { ipAddress, userAgent });
 
 		return ResponseToolkit.success(
 			c,
@@ -97,7 +109,11 @@ export const AuthHandler = {
 			data: payload,
 		});
 
-		await authService.verifyEmail(validation);
+		const ipAddress =
+			c.req.header("x-forwarded-for") || c.req.header("x-real-ip") || "unknown";
+		const userAgent = c.req.header("user-agent") || "unknown";
+
+		await authService.verifyEmail(validation, { ipAddress, userAgent });
 
 		return ResponseToolkit.success(c, {}, "Email verified successfully", 200);
 	},
@@ -109,7 +125,14 @@ export const AuthHandler = {
 			data: payload,
 		});
 
-		await authService.forgotPassword(validation.email);
+		const ipAddress =
+			c.req.header("x-forwarded-for") || c.req.header("x-real-ip") || "unknown";
+		const userAgent = c.req.header("user-agent") || "unknown";
+
+		await authService.forgotPassword(validation.email, {
+			ipAddress,
+			userAgent,
+		});
 
 		return ResponseToolkit.success(c, {}, "Forgot password email sent", 200);
 	},
@@ -121,7 +144,14 @@ export const AuthHandler = {
 			data: payload,
 		});
 
-		await authService.resetPassword(validation.token, validation.password);
+		const ipAddress =
+			c.req.header("x-forwarded-for") || c.req.header("x-real-ip") || "unknown";
+		const userAgent = c.req.header("user-agent") || "unknown";
+
+		await authService.resetPassword(validation.token, validation.password, {
+			ipAddress,
+			userAgent,
+		});
 
 		return ResponseToolkit.success(c, {}, "Password reset successfully", 200);
 	},

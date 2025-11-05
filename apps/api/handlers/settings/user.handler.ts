@@ -66,7 +66,7 @@ export const UserHandler = {
 			data: payload,
 		});
 
-		db.transaction(async (trx) => {
+		await db.transaction(async (trx) => {
 			await UserRepository().create(
 				{
 					name: validate.name,
