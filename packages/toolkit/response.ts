@@ -10,7 +10,6 @@ export class ResponseToolkit {
 	) {
 		return ctx.json(
 			{
-				status: statusCode,
 				success: true,
 				message,
 				data,
@@ -23,12 +22,15 @@ export class ResponseToolkit {
 		ctx: Context,
 		message: string,
 		statusCode: Status = 400 as Status,
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		errors?: any[],
 	) {
 		return ctx.json(
 			{
-				status: statusCode,
 				success: false,
 				message,
+				data: null,
+				...(errors ? { errors } : {}),
 			},
 			{ status: statusCode },
 		);
@@ -48,13 +50,15 @@ export class ResponseToolkit {
 		data: T | null,
 		message: string = "Success",
 		statusCode: Status = 200 as Status,
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		errors?: any[],
 	) {
 		return ctx.json(
 			{
-				status: statusCode,
 				success,
 				message,
 				data,
+				...(errors ? { errors } : {}),
 			},
 			{ status: statusCode },
 		);
@@ -68,9 +72,9 @@ export class ResponseToolkit {
 	) {
 		return ctx.json(
 			{
-				status: statusCode,
 				success: false,
 				message,
+				data: null,
 				errors,
 			},
 			{ status: statusCode },

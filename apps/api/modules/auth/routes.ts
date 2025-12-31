@@ -11,12 +11,19 @@ import { AuthService } from "./service";
 
 import { ResponseToolkit } from "@toolkit/response";
 import { defaultHook } from "packages/errors";
+import { commonResponse } from "@toolkit/schemas";
+import { ZodUserInformation } from "@packages/*";
 
 const AuthRoutes = new OpenAPIHono({ defaultHook });
 
 // --------------------------------
 // POST /auth/login
 // --------------------------------
+
+const loginDataSchema = z.object({
+	user: ZodUserInformation,
+	token: z.string(),
+});
 
 const loginRoute = createRoute({
 	method: "post",
@@ -32,46 +39,19 @@ const loginRoute = createRoute({
 		},
 	},
 	responses: {
-		200: {
-			content: {
-				"application/json": {
-					schema: z.object({
-						user: z
-							.object({
-								id: z.string(),
-								name: z.string(),
-								email: z.string(),
-								email_verified_at: z.string().nullable().optional(),
-								created_at: z.any(),
-								updated_at: z.any(),
-							})
-							.passthrough(),
-						token: z.string(),
-					}),
-				},
-			},
-			description: "Login successful",
-		},
-		422: {
-			content: {
-				"application/json": {
-					schema: z.object({
-						error: z.string(),
-					}),
-				},
-			},
-			description: "Validation error",
-		},
-		401: {
-			description: "Unauthorized",
-		},
+		...commonResponse(loginDataSchema, "Login successful", [201, 403, 404]),
 	},
 });
 
 AuthRoutes.openapi(loginRoute, async (c) => {
 	const { email, password } = c.req.valid("json");
 	const result = await new AuthService().login(email, password);
-	return c.json(result);
+	return ResponseToolkit.success<z.infer<typeof loginDataSchema>, 200>(
+		c,
+		result,
+		"Login successful",
+		200,
+	);
 });
 
 // --------------------------------
@@ -91,17 +71,7 @@ const registerRoute = createRoute({
 		},
 	},
 	responses: {
-		200: {
-			content: {
-				"application/json": {
-					schema: z.any(),
-				},
-			},
-			description: "Registration successful",
-		},
-		401: {
-			description: "Validation error",
-		},
+		...commonResponse(z.null(), "Registration successful", [200, 403, 404]),
 	},
 });
 
@@ -112,7 +82,12 @@ AuthRoutes.openapi(registerRoute, async (c) => {
 		email,
 		password,
 	});
-	return ResponseToolkit.success(c, null, "Registration successful");
+	return ResponseToolkit.success<null, 201>(
+		c,
+		null,
+		"Registration successful",
+		201,
+	);
 });
 
 // --------------------------------
@@ -132,12 +107,7 @@ const resendVerificationRoute = createRoute({
 		},
 	},
 	responses: {
-		200: {
-			description: "Verification email sent",
-		},
-		401: {
-			description: "Validation error",
-		},
+		...commonResponse(z.null(), "Verification email sent", [200, 403, 404]),
 	},
 });
 
@@ -146,7 +116,8 @@ AuthRoutes.openapi(resendVerificationRoute, async (c) => {
 	await new AuthService().resendVerification({
 		email,
 	});
-	return ResponseToolkit.success(c, null, "Verification email sent");
+
+	return ResponseToolkit.success<null, 200>(c, null, "Verification email sent");
 });
 
 // --------------------------------
@@ -166,12 +137,7 @@ const verifyEmailRoute = createRoute({
 		},
 	},
 	responses: {
-		200: {
-			description: "Email verified",
-		},
-		401: {
-			description: "Validation error",
-		},
+		...commonResponse(z.null(), "Email verified", [200, 403, 404]),
 	},
 });
 
@@ -180,7 +146,8 @@ AuthRoutes.openapi(verifyEmailRoute, async (c) => {
 	await new AuthService().verifyEmail({
 		token,
 	});
-	return ResponseToolkit.success(c, null, "Email verified");
+
+	return ResponseToolkit.success<null, 200>(c, null, "Email verified", 200);
 });
 
 // --------------------------------
@@ -200,12 +167,7 @@ const forgotPasswordRoute = createRoute({
 		},
 	},
 	responses: {
-		200: {
-			description: "Password reset email sent",
-		},
-		401: {
-			description: "Validation error",
-		},
+		...commonResponse(z.null(), "Password reset email sent", [201, 403, 404]),
 	},
 });
 
@@ -214,7 +176,12 @@ AuthRoutes.openapi(forgotPasswordRoute, async (c) => {
 	await new AuthService().forgotPassword({
 		email,
 	});
-	return ResponseToolkit.success(c, null, "Password reset email sent");
+	return ResponseToolkit.success<null, 200>(
+		c,
+		null,
+		"Password reset email sent",
+		200,
+	);
 });
 
 // --------------------------------
@@ -234,12 +201,7 @@ const resetPasswordRoute = createRoute({
 		},
 	},
 	responses: {
-		200: {
-			description: "Password reset successful",
-		},
-		401: {
-			description: "Validation error",
-		},
+		...commonResponse(z.null(), "Password reset successful", [201, 403, 404]),
 	},
 });
 
@@ -249,7 +211,12 @@ AuthRoutes.openapi(resetPasswordRoute, async (c) => {
 		token,
 		password,
 	});
-	return ResponseToolkit.success(c, null, "Password reset successful");
+	return ResponseToolkit.success<null, 200>(
+		c,
+		null,
+		"Password reset successful",
+		200,
+	);
 });
 
 export default AuthRoutes;

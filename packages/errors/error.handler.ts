@@ -14,7 +14,7 @@ export const registerException = (app: Hono) => {
 	app.notFound((c) => {
 		return c.json(
 			{
-				status: false,
+				success: false,
 				message: "Route not found",
 				errors: [],
 				data: null,
@@ -27,7 +27,7 @@ export const registerException = (app: Hono) => {
 		if (err instanceof HTTPException && err.status === 422) {
 			return c.json(
 				{
-					status: false,
+					success: false,
 					message: err.message,
 					errors: err.cause || [],
 					data: null,
@@ -41,7 +41,7 @@ export const registerException = (app: Hono) => {
 		if (err instanceof ZodError) {
 			return c.json(
 				{
-					status: false,
+					success: false,
 					message: "Validation failed",
 					errors: formatZodError(err),
 					data: null,
@@ -55,7 +55,7 @@ export const registerException = (app: Hono) => {
 			if (err.status === 404) {
 				return c.json(
 					{
-						status: false,
+						success: false,
 						message: "Route not found",
 						errors: [],
 						data: null,
@@ -65,7 +65,7 @@ export const registerException = (app: Hono) => {
 			}
 			return c.json(
 				{
-					status: false,
+					success: false,
 					message: err.message,
 					errors: [],
 					data: null,
@@ -78,7 +78,7 @@ export const registerException = (app: Hono) => {
 			if (err instanceof ForbiddenError) {
 				return c.json(
 					{
-						status: false,
+						success: false,
 						message: err.message,
 						errors: [],
 						data: null,
@@ -90,7 +90,7 @@ export const registerException = (app: Hono) => {
 			if (err instanceof NotFoundError) {
 				return c.json(
 					{
-						status: false,
+						success: false,
 						message: err.message,
 						errors: [],
 						data: null,
@@ -102,7 +102,7 @@ export const registerException = (app: Hono) => {
 			if (err instanceof UnprocessableEntityError) {
 				return c.json(
 					{
-						status: false,
+						success: false,
 						message: err.message,
 						errors: err.error || [],
 						data: null,
@@ -114,7 +114,7 @@ export const registerException = (app: Hono) => {
 			if (err instanceof UnauthorizedError) {
 				return c.json(
 					{
-						status: false,
+						success: false,
 						message: err.message,
 						errors: [],
 						data: null,
@@ -139,7 +139,7 @@ export const registerException = (app: Hono) => {
 
 		return c.json(
 			{
-				status: false,
+				success: false,
 				message: "Internal server error",
 				errors: [],
 				trace:
