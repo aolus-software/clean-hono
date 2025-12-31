@@ -1,10 +1,10 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { corsConfig } from "@config";
-import routes from "@api/routes";
 import { pinoLogger } from "hono-pino";
 import { logger } from "@packages";
-import { registerException } from "@app/api/errors/index";
+import bootstrap from "./modules";
+import { registerException } from "packages/errors";
 
 const app: Hono = new Hono();
 
@@ -29,13 +29,12 @@ app.use(
 
 // Bind services to context===========================================
 app.use("*", async (c, next) => {
-	// c.set("authService", new AuthService());
 	await next();
 });
 
 // Error handling=====================================================
 registerException(app);
 
-app.route("/", routes);
+app.route("/", bootstrap);
 
 export default app;

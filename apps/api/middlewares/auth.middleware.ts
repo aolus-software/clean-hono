@@ -1,9 +1,9 @@
 import { JWTToolkit } from "@toolkit/jwt";
-import { UnauthorizedError } from "../errors";
-import { UserRepository } from "../repositories";
+import { UnauthorizedError } from "../../../packages/errors";
 import { MiddlewareHandler } from "hono";
 import { Cache, UserInformationCacheKey } from "@cache/*";
-import { UserInformation } from "../types/UserInformation";
+import { UserInformation } from "../../../packages/types/UserInformation";
+import { UserRepository } from "@postgres/repositories";
 
 export const authMiddleware: MiddlewareHandler = async (c, next) => {
 	const authHeader = c.req.header("authorization") || "";

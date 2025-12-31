@@ -47,7 +47,8 @@
 	},
 	"dependencies": {
 		"@clickhouse/client": "^1.12.1",
-		"@vinejs/vine": "^4.0.1",
+		"@hono/zod-openapi": "^1.2.0",
+		"@scalar/hono-api-reference": "^0.9.30",
 		"bcryptjs": "^3.0.2",
 		"bullmq": "^5.61.0",
 		"crypto-js": "^4.2.0",
@@ -56,6 +57,7 @@
 		"drizzle-orm": "^0.44.6",
 		"hono": "^4.9.11",
 		"hono-pino": "^0.10.3",
+		"hono-zod-openapi": "^1.0.1",
 		"ioredis": "^5.8.1",
 		"nodemailer": "^7.0.10",
 		"pg": "^8.16.3",

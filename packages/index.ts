@@ -9,3 +9,8 @@ export * from "./toolkit/index";
 
 export * from "./mail/mail.service";
 export * from "./mail/transport.mail";
+
+export * from "./types/UserInformation";
+export * from "./types/datatable";
+export * from "./types/pagination";
+export * from "./types/sort-direction";

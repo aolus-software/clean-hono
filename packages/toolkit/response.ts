@@ -2,11 +2,11 @@ import { Context } from "hono";
 import { ContentfulStatusCode } from "hono/utils/http-status";
 
 export class ResponseToolkit {
-	static success<T>(
+	static success<T, Status extends ContentfulStatusCode = 200>(
 		ctx: Context,
 		data: T | null,
 		message: string = "Success",
-		statusCode: ContentfulStatusCode,
+		statusCode: Status = 200 as Status,
 	) {
 		return ctx.json(
 			{
@@ -19,10 +19,10 @@ export class ResponseToolkit {
 		);
 	}
 
-	static error(
+	static error<Status extends ContentfulStatusCode = 400>(
 		ctx: Context,
 		message: string,
-		statusCode: ContentfulStatusCode = 400,
+		statusCode: Status = 400 as Status,
 	) {
 		return ctx.json(
 			{
@@ -42,12 +42,12 @@ export class ResponseToolkit {
 		return this.error(ctx, message, 401);
 	}
 
-	static response<T>(
+	static response<T, Status extends ContentfulStatusCode = 200>(
 		ctx: Context,
 		success: boolean,
 		data: T | null,
 		message: string = "Success",
-		statusCode: ContentfulStatusCode = 200,
+		statusCode: Status = 200 as Status,
 	) {
 		return ctx.json(
 			{
@@ -60,11 +60,11 @@ export class ResponseToolkit {
 		);
 	}
 
-	static validationError(
+	static validationError<Status extends ContentfulStatusCode = 422>(
 		ctx: Context,
 		errors: { [key: string]: string }[],
 		message: string = "Validation failed",
-		statusCode: ContentfulStatusCode = 422,
+		statusCode: Status = 422 as Status,
 	) {
 		return ctx.json(
 			{
