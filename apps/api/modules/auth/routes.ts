@@ -39,7 +39,13 @@ const loginRoute = createRoute({
 		},
 	},
 	responses: {
-		...commonResponse(loginDataSchema, "Login successful", [201, 403, 404]),
+		...commonResponse(loginDataSchema, "Login successful", {
+			exclude: [201, 403, 404],
+			validationErrors: {
+				email: ["Email not found", "Email format is invalid"],
+				password: ["Incorrect password"],
+			},
+		}),
 	},
 });
 
@@ -71,7 +77,13 @@ const registerRoute = createRoute({
 		},
 	},
 	responses: {
-		...commonResponse(z.null(), "Registration successful", [200, 403, 404]),
+		...commonResponse(z.null(), "Registration successful", {
+			exclude: [200, 403, 404],
+			validationErrors: {
+				email: ["Email is already in use", "Email format is invalid"],
+				password: ["Password must be at least 8 characters"],
+			},
+		}),
 	},
 });
 
@@ -107,7 +119,12 @@ const resendVerificationRoute = createRoute({
 		},
 	},
 	responses: {
-		...commonResponse(z.null(), "Verification email sent", [200, 403, 404]),
+		...commonResponse(z.null(), "Verification email sent", {
+			exclude: [200, 403, 404],
+			validationErrors: {
+				email: ["Email is already verified", "Email format is invalid"],
+			},
+		}),
 	},
 });
 
@@ -137,7 +154,12 @@ const verifyEmailRoute = createRoute({
 		},
 	},
 	responses: {
-		...commonResponse(z.null(), "Email verified", [200, 403, 404]),
+		...commonResponse(z.null(), "Email verified", {
+			exclude: [200, 403, 404],
+			validationErrors: {
+				token: ["Invalid or expired token"],
+			},
+		}),
 	},
 });
 
@@ -167,7 +189,12 @@ const forgotPasswordRoute = createRoute({
 		},
 	},
 	responses: {
-		...commonResponse(z.null(), "Password reset email sent", [201, 403, 404]),
+		...commonResponse(z.null(), "Password reset email sent", {
+			exclude: [201, 403, 404],
+			validationErrors: {
+				email: ["Email not found", "Email format is invalid"],
+			},
+		}),
 	},
 });
 
@@ -201,7 +228,13 @@ const resetPasswordRoute = createRoute({
 		},
 	},
 	responses: {
-		...commonResponse(z.null(), "Password reset successful", [201, 403, 404]),
+		...commonResponse(z.null(), "Password reset successful", {
+			exclude: [201, 403, 404],
+			validationErrors: {
+				token: ["Invalid or expired token"],
+				password: ["Password must be at least 8 characters"],
+			},
+		}),
 	},
 });
 

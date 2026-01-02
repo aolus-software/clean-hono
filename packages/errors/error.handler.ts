@@ -104,7 +104,7 @@ export const registerException = (app: Hono) => {
 					{
 						success: false,
 						message: err.message,
-						errors: err.error || [],
+						errors: err.errors ?? [],
 						data: null,
 					},
 					422,

@@ -30,26 +30,15 @@ export class AuthService {
 		if (!user) {
 			throw new UnprocessableEntityError("User not found", [
 				{
-					field: "email",
-					message: "User not found",
+					email: ["No account found with this email address"],
 				},
 			]);
 		}
 
-		if (!user.email_verified_at) {
+		if (!user.email_verified_at || user.email_verified_at === null) {
 			throw new UnprocessableEntityError("Email not verified", [
 				{
-					field: "email",
-					message: "Please verify your email before logging in",
-				},
-			]);
-		}
-
-		if (user.email_verified_at === null) {
-			throw new UnprocessableEntityError("Email not verified", [
-				{
-					field: "email",
-					message: "Please verify your email before logging in",
+					email: ["Please verify your email before logging in"],
 				},
 			]);
 		}
@@ -57,8 +46,7 @@ export class AuthService {
 		if (user.status !== "active") {
 			throw new UnprocessableEntityError("Account inactive", [
 				{
-					field: "email",
-					message: "Your account is not active. Please contact support.",
+					email: ["Your account is not active. Please contact support."],
 				},
 			]);
 		}
@@ -67,8 +55,7 @@ export class AuthService {
 		if (!isPasswordValid) {
 			throw new UnprocessableEntityError("Invalid credentials", [
 				{
-					field: "password",
-					message: "Incorrect password",
+					password: ["The credentials you provided are incorrect"],
 				},
 			]);
 		}
@@ -87,8 +74,7 @@ export class AuthService {
 		if (user) {
 			throw new UnprocessableEntityError("User already exists", [
 				{
-					field: "email",
-					message: "User already exists",
+					email: ["A user with this email already exists"],
 				},
 			]);
 		}
@@ -135,8 +121,7 @@ export class AuthService {
 		if (user.email_verified_at !== null) {
 			throw new UnprocessableEntityError("Email already verified", [
 				{
-					field: "email",
-					message: "This email has already been verified",
+					email: ["Email is already verified"],
 				},
 			]);
 		}
@@ -174,8 +159,7 @@ export class AuthService {
 		if (!verificationRecord) {
 			throw new UnprocessableEntityError("Invalid verification token", [
 				{
-					field: "token",
-					message: "The provided verification token is invalid",
+					token: ["The provided verification token is invalid"],
 				},
 			]);
 		}
@@ -233,8 +217,7 @@ export class AuthService {
 		if (!forgotPasswordRecord) {
 			throw new UnprocessableEntityError("Invalid reset password token", [
 				{
-					field: "token",
-					message: "The provided reset password token is invalid",
+					token: ["The provided reset password token is invalid"],
 				},
 			]);
 		}

@@ -239,8 +239,7 @@ export const UserRepository = () => {
 			if (isEmailExist.length > 0) {
 				throw new UnprocessableEntityError("Email already exists", [
 					{
-						field: "email",
-						message: "Email already exists",
+						email: ["Email is already in use"],
 					},
 				]);
 			}
@@ -465,7 +464,7 @@ export const UserRepository = () => {
 		findByEmail: async (
 			email: string,
 			tx?: DbTransaction,
-		): Promise<UserForAuth> => {
+		): Promise<UserForAuth | null> => {
 			const database = tx || dbInstance;
 			const user = await database.query.users.findFirst({
 				where: and(eq(usersTable.email, email), isNull(usersTable.deleted_at)),
@@ -480,12 +479,7 @@ export const UserRepository = () => {
 			});
 
 			if (!user) {
-				throw new UnprocessableEntityError("Validation error", [
-					{
-						field: "email",
-						message: "Invalid email or password",
-					},
-				]);
+				return null;
 			}
 
 			return user;

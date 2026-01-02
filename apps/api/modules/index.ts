@@ -4,10 +4,12 @@ import { defaultHook } from "packages/errors";
 import HomeRoutes from "./home/route";
 import AuthRoutes from "./auth/routes";
 import SettingsRoutes from "./settings";
+import ProfileRoutes from "./profile/routes";
 
 const bootstrap = new OpenAPIHono({ defaultHook });
 
 bootstrap.route("/", HomeRoutes);
+bootstrap.route("/profile", ProfileRoutes);
 bootstrap.route("/auth", AuthRoutes);
 bootstrap.route("/settings", SettingsRoutes);
 
@@ -19,6 +21,13 @@ bootstrap.doc("/docs/openapi.json", {
 		description: "Clean Architecture API built with Hono",
 	},
 	servers: [{ url: "/", description: "Development" }],
+});
+
+bootstrap.openAPIRegistry.registerComponent("securitySchemes", "Bearer", {
+	type: "http",
+	scheme: "bearer",
+	description:
+		"Bearer token authentication. Can be obtained via the /auth/login endpoint.",
 });
 
 bootstrap.get(
