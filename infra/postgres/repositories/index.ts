@@ -4,7 +4,7 @@ import { PostgresJsQueryResultHKT } from "drizzle-orm/postgres-js";
 import { schema } from "@postgres/index";
 
 export * from "./user.repository";
-export * from "./permisison.repository";
+export * from "./permission.repository";
 export * from "./role.repository";
 
 export type DbTransaction = PgTransaction<

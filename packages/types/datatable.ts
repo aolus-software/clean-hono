@@ -1,4 +1,5 @@
 import { SortDirection } from "./sort-direction";
+import { z } from "@hono/zod-openapi";
 
 export type DatatableType = {
 	page: number;
@@ -15,3 +16,15 @@ export type DatatableType = {
 	// exclude=name,age
 	// include=name,age
 };
+
+export const ZodDatatableSchema = z.object({
+	page: z.number().min(1).default(1),
+	limit: z.number().min(1).max(100).default(10),
+	search: z.string().nullable().default(null),
+	sort: z.string().default("id"),
+	sortDirection: z.enum(["asc", "desc"]).default("desc"),
+	filter: z
+		.record(z.string(), z.union([z.string(), z.boolean(), z.date()]))
+		.nullable()
+		.default(null),
+});

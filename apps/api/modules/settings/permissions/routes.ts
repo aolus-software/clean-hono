@@ -1,7 +1,19 @@
-import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
-import { z } from "zod";
+import { authMiddleware } from "@app/api/middlewares";
+import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { ZodDatatableSchema } from "@packages/*";
+import { ResponseToolkit } from "@toolkit/response";
+import { commonResponse } from "@toolkit/schemas";
+import {
+	PermissionCreateSchema,
+	PermissionDetailResponseSchema,
+	PermissionListResponseSchema,
+	PermissionUpdateSchema,
+} from "./schema";
+import { PermissionService } from "./services";
 
 const PermissionRoutes = new OpenAPIHono();
+
+PermissionRoutes.use(authMiddleware);
 
 // -------------------
 // GET settings/permissions
@@ -9,30 +21,202 @@ const PermissionRoutes = new OpenAPIHono();
 const PermissionGetRoute = createRoute({
 	method: "get",
 	path: "/",
-	tags: ["Settings"],
+	tags: ["Settings/Permissions"],
+	security: [{ Bearer: [] }],
+	request: {
+		query: ZodDatatableSchema,
+	},
 	responses: {
 		200: {
 			content: {
 				"application/json": {
-					schema: z.any(),
+					schema: PermissionListResponseSchema,
 				},
 			},
-			description: "Permissions list",
+			description: "List of permissions",
 		},
-		401: {
-			description: "Unauthorized",
-		},
-		403: {
-			description: "Forbidden",
-		},
-		500: {
-			description: "Internal Server Error",
-		},
+		...commonResponse(PermissionListResponseSchema, "PermissionGetResponse", {
+			exclude: [200, 201],
+		}),
 	},
 });
 
-PermissionRoutes.openapi(PermissionGetRoute, (c) => {
-	return c.json({});
+PermissionRoutes.openapi(PermissionGetRoute, async (c) => {
+	const queryParam = c.req.valid("query");
+	const permissionService = new PermissionService();
+	const permissions = await permissionService.findAll(queryParam);
+
+	return ResponseToolkit.success(
+		c,
+		permissions,
+		"Fetched permissions successfully",
+		200,
+	);
+});
+
+// -------------------
+// GET settings/permissions/:id
+// -------------------
+const PermissionDetailRoute = createRoute({
+	method: "get",
+	path: "/{id}",
+	tags: ["Settings/Permissions"],
+	security: [{ Bearer: [] }],
+	request: {
+		params: z.object({
+			id: z.string().uuid(),
+		}),
+	},
+	responses: {
+		200: {
+			content: {
+				"application/json": {
+					schema: PermissionDetailResponseSchema,
+				},
+			},
+			description: "Permission detail",
+		},
+		...commonResponse(
+			PermissionDetailResponseSchema,
+			"PermissionDetailResponse",
+			{
+				exclude: [200, 201],
+			},
+		),
+	},
+});
+
+PermissionRoutes.openapi(PermissionDetailRoute, async (c) => {
+	const { id } = c.req.valid("param");
+	const permissionService = new PermissionService();
+	const permission = await permissionService.findOne(id);
+
+	return ResponseToolkit.success(
+		c,
+		permission,
+		"Fetched permission successfully",
+		200,
+	);
+});
+
+// -------------------
+// POST settings/permissions
+// -------------------
+const PermissionCreateRoute = createRoute({
+	method: "post",
+	path: "/",
+	tags: ["Settings/Permissions"],
+	security: [{ Bearer: [] }],
+	request: {
+		body: {
+			content: {
+				"application/json": {
+					schema: PermissionCreateSchema,
+				},
+			},
+		},
+	},
+	responses: {
+		201: {
+			content: {
+				"application/json": {
+					schema: z.object({}),
+				},
+			},
+			description: "Permission created successfully",
+		},
+		...commonResponse(z.object({}), "PermissionCreateResponse", {
+			exclude: [200, 201],
+		}),
+	},
+});
+
+PermissionRoutes.openapi(PermissionCreateRoute, async (c) => {
+	const data = c.req.valid("json");
+	const permissionService = new PermissionService();
+	await permissionService.create(data);
+
+	return ResponseToolkit.created(c, {}, "Permission created successfully");
+});
+
+// -------------------
+// PUT settings/permissions/:id
+// -------------------
+const PermissionUpdateRoute = createRoute({
+	method: "put",
+	path: "/{id}",
+	tags: ["Settings/Permissions"],
+	security: [{ Bearer: [] }],
+	request: {
+		params: z.object({
+			id: z.string().uuid(),
+		}),
+		body: {
+			content: {
+				"application/json": {
+					schema: PermissionUpdateSchema,
+				},
+			},
+		},
+	},
+	responses: {
+		200: {
+			content: {
+				"application/json": {
+					schema: z.object({}),
+				},
+			},
+			description: "Permission updated successfully",
+		},
+		...commonResponse(z.object({}), "PermissionUpdateResponse", {
+			exclude: [200, 201],
+		}),
+	},
+});
+
+PermissionRoutes.openapi(PermissionUpdateRoute, async (c) => {
+	const { id } = c.req.valid("param");
+	const data = c.req.valid("json");
+	const permissionService = new PermissionService();
+	await permissionService.update(data, id);
+
+	return ResponseToolkit.success(c, {}, "Permission updated successfully", 200);
+});
+
+// -------------------
+// DELETE settings/permissions/:id
+// -------------------
+const PermissionDeleteRoute = createRoute({
+	method: "delete",
+	path: "/{id}",
+	tags: ["Settings/Permissions"],
+	security: [{ Bearer: [] }],
+	request: {
+		params: z.object({
+			id: z.string().uuid(),
+		}),
+	},
+	responses: {
+		200: {
+			content: {
+				"application/json": {
+					schema: z.object({}),
+				},
+			},
+			description: "Permission deleted successfully",
+		},
+		...commonResponse(z.object({}), "PermissionDeleteResponse", {
+			exclude: [200, 201],
+		}),
+	},
+});
+
+PermissionRoutes.openapi(PermissionDeleteRoute, async (c) => {
+	const { id } = c.req.valid("param");
+	const permissionService = new PermissionService();
+	await permissionService.delete(id);
+
+	return ResponseToolkit.success(c, {}, "Permission deleted successfully", 200);
 });
 
 export default PermissionRoutes;

@@ -122,10 +122,9 @@ export const RoleRepository = () => {
 			});
 
 			if (isNameExists) {
-				throw new UnprocessableEntityError("Role name already exists", [
+				throw new UnprocessableEntityError("Some permission already exists", [
 					{
-						field: "name",
-						message: `The role name for ${data.name} already exists`,
+						name: [`The role name for ${data.name} already exists`],
 					},
 				]);
 			}
@@ -246,10 +245,7 @@ export const RoleRepository = () => {
 
 			if (isNameExists) {
 				throw new UnprocessableEntityError("Role name already exists", [
-					{
-						field: "name",
-						message: `The role name for ${data.name} already exists`,
-					},
+					{ name: [`The role name for ${data.name} already exists`] },
 				]);
 			}
 

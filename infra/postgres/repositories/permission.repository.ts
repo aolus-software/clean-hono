@@ -179,8 +179,9 @@ export const PermissionRepository = () => {
 			if (existingPermissions.length > 0) {
 				throw new UnprocessableEntityError("Some permission already exists", [
 					{
-						field: "name",
-						message: `Some permission is already exist ${existingPermissions.map((perm) => perm.name).join(", ")}`,
+						name: [
+							`Permission names ${existingPermissions.map((perm) => perm.name).join(", ")} already exist`,
+						],
 					},
 				]);
 			}
@@ -221,8 +222,7 @@ export const PermissionRepository = () => {
 			if (isPermissionNameAlreadyExist.length > 0) {
 				throw new UnprocessableEntityError("Permission name already exists", [
 					{
-						field: "name",
-						message: "Permission name already exists",
+						name: ["Permission name already exists"],
 					},
 				]);
 			}
