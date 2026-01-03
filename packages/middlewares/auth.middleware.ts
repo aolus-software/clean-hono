@@ -1,11 +1,11 @@
 import { JWTToolkit } from "@toolkit/jwt";
-import { UnauthorizedError } from "../../../packages/errors";
+import { UnauthorizedError } from "../errors";
 import { MiddlewareHandler } from "hono";
 import { Cache, UserInformationCacheKey } from "@cache/*";
-import { UserInformation } from "../../../packages/types/UserInformation";
+import { UserInformation } from "../types/UserInformation";
 import { UserRepository } from "@postgres/repositories";
 
-export const authMiddleware: MiddlewareHandler = async (c, next) => {
+export const AuthMiddleware: MiddlewareHandler = async (c, next) => {
 	const authHeader = c.req.header("authorization") || "";
 	const token = authHeader.startsWith("Bearer ")
 		? authHeader.slice(7)

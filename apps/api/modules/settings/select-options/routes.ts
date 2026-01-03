@@ -1,4 +1,3 @@
-import { authMiddleware } from "@app/api/middlewares";
 import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
 import { ResponseToolkit } from "@toolkit/response";
 import { commonResponse } from "@toolkit/schemas";
@@ -7,10 +6,11 @@ import {
 	RoleSelectOptionsResponseSchema,
 } from "./schema";
 import { SelectOptionsService } from "./services";
+import { AuthMiddleware } from "@packages/*";
 
 const SelectOptionsRoutes = new OpenAPIHono();
 
-SelectOptionsRoutes.use(authMiddleware);
+SelectOptionsRoutes.use(AuthMiddleware);
 
 // -------------------
 // GET /settings/select-options/permissions

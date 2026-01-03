@@ -2,6 +2,9 @@ export { createLogger, logger } from "./logger/logger";
 
 export * from "./default/index";
 
+export * from "./middlewares/index";
+export * from "./guards/index";
+
 export * from "./security/encrypt";
 export * from "./security/hash";
 

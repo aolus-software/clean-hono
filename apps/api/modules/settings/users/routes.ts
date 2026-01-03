@@ -1,6 +1,10 @@
-import { authMiddleware } from "@app/api/middlewares";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { ZodDatatableSchema } from "@packages/*";
+import {
+	AuthMiddleware,
+	GuardDescriptions,
+	Guards,
+	ZodDatatableSchema,
+} from "@packages/*";
 import { ResponseToolkit } from "@toolkit/response";
 import { commonResponse } from "@toolkit/schemas";
 import {
@@ -13,7 +17,7 @@ import { UserService } from "./services";
 
 const UserRoutes = new OpenAPIHono();
 
-UserRoutes.use(authMiddleware);
+UserRoutes.use(AuthMiddleware);
 
 // -------------------
 // GET /settings/users
@@ -33,7 +37,7 @@ const UserGetRoute = createRoute({
 					schema: UserListResponseSchema,
 				},
 			},
-			description: "List of users",
+			description: GuardDescriptions.userManagement.list(),
 		},
 		...commonResponse(UserListResponseSchema, "UserGetResponse", {
 			exclude: [200, 201],
@@ -49,41 +53,7 @@ UserRoutes.openapi(UserGetRoute, async (c) => {
 	return ResponseToolkit.success(c, users, "Fetched users successfully", 200);
 });
 
-// -------------------
-// GET /settings/users/:id
-// -------------------
-const UserDetailRoute = createRoute({
-	method: "get",
-	path: "/{id}",
-	tags: ["Settings/Users"],
-	security: [{ Bearer: [] }],
-	request: {
-		params: z.object({
-			id: z.string().uuid(),
-		}),
-	},
-	responses: {
-		200: {
-			content: {
-				"application/json": {
-					schema: UserDetailResponseSchema,
-				},
-			},
-			description: "User detail",
-		},
-		...commonResponse(UserDetailResponseSchema, "UserDetailResponse", {
-			exclude: [200, 201],
-		}),
-	},
-});
-
-UserRoutes.openapi(UserDetailRoute, async (c) => {
-	const { id } = c.req.valid("param");
-	const userService = new UserService();
-	const user = await userService.findOne(id);
-
-	return ResponseToolkit.success(c, user, "Fetched user successfully", 200);
-});
+UserRoutes.use("/", Guards.userManagement.list());
 
 // -------------------
 // POST /settings/users
@@ -109,7 +79,7 @@ const UserCreateRoute = createRoute({
 					schema: z.object({}),
 				},
 			},
-			description: "User created successfully",
+			description: GuardDescriptions.userManagement.create(),
 		},
 		...commonResponse(z.object({}), "UserCreateResponse", {
 			exclude: [200, 201],
@@ -124,6 +94,46 @@ UserRoutes.openapi(UserCreateRoute, async (c) => {
 
 	return ResponseToolkit.created(c, {}, "User created successfully");
 });
+
+UserRoutes.use("/", Guards.userManagement.create());
+
+// -------------------
+// GET /settings/users/:id
+// -------------------
+const UserDetailRoute = createRoute({
+	method: "get",
+	path: "/{id}",
+	tags: ["Settings/Users"],
+	security: [{ Bearer: [] }],
+	request: {
+		params: z.object({
+			id: z.string().uuid(),
+		}),
+	},
+	responses: {
+		200: {
+			content: {
+				"application/json": {
+					schema: UserDetailResponseSchema,
+				},
+			},
+			description: GuardDescriptions.userManagement.detail(),
+		},
+		...commonResponse(UserDetailResponseSchema, "UserDetailResponse", {
+			exclude: [200, 201],
+		}),
+	},
+});
+
+UserRoutes.openapi(UserDetailRoute, async (c) => {
+	const { id } = c.req.valid("param");
+	const userService = new UserService();
+	const user = await userService.findOne(id);
+
+	return ResponseToolkit.success(c, user, "Fetched user successfully", 200);
+});
+
+UserRoutes.use("/:id", Guards.userManagement.detail());
 
 // -------------------
 // PUT /settings/users/:id
@@ -152,7 +162,7 @@ const UserUpdateRoute = createRoute({
 					schema: z.object({}),
 				},
 			},
-			description: "User updated successfully",
+			description: GuardDescriptions.userManagement.edit(),
 		},
 		...commonResponse(z.object({}), "UserUpdateResponse", {
 			exclude: [200, 201],
@@ -168,6 +178,8 @@ UserRoutes.openapi(UserUpdateRoute, async (c) => {
 
 	return ResponseToolkit.success(c, {}, "User updated successfully", 200);
 });
+
+UserRoutes.use("/:id", Guards.userManagement.edit());
 
 // -------------------
 // DELETE /settings/users/:id
@@ -189,7 +201,7 @@ const UserDeleteRoute = createRoute({
 					schema: z.object({}),
 				},
 			},
-			description: "User deleted successfully",
+			description: GuardDescriptions.userManagement.delete(),
 		},
 		...commonResponse(z.object({}), "UserDeleteResponse", {
 			exclude: [200, 201],
@@ -204,5 +216,7 @@ UserRoutes.openapi(UserDeleteRoute, async (c) => {
 
 	return ResponseToolkit.success(c, {}, "User deleted successfully", 200);
 });
+
+UserRoutes.use("/:id", Guards.userManagement.delete());
 
 export default UserRoutes;

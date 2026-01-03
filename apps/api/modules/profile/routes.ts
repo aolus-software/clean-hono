@@ -1,6 +1,6 @@
-import { authMiddleware } from "@app/api/middlewares";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import {
+	AuthMiddleware,
 	ResponseToolkit,
 	UserInformation,
 	ZodUserInformation,
@@ -13,7 +13,7 @@ import { ProfileService } from "./service";
 const ProfileRoutes = new OpenAPIHono({ defaultHook });
 
 // Apply auth middleware to all profile routes
-ProfileRoutes.use("*", authMiddleware);
+ProfileRoutes.use("*", AuthMiddleware);
 
 // --------------------------------
 // GET /profile

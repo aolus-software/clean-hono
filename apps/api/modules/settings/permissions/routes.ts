@@ -1,6 +1,9 @@
-import { authMiddleware } from "@app/api/middlewares";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { ZodDatatableSchema } from "@packages/*";
+import {
+	AuthMiddleware,
+	GuardDescriptions,
+	ZodDatatableSchema,
+} from "@packages/*";
 import { ResponseToolkit } from "@toolkit/response";
 import { commonResponse } from "@toolkit/schemas";
 import {
@@ -13,7 +16,7 @@ import { PermissionService } from "./services";
 
 const PermissionRoutes = new OpenAPIHono();
 
-PermissionRoutes.use(authMiddleware);
+PermissionRoutes.use(AuthMiddleware);
 
 // -------------------
 // GET settings/permissions
@@ -33,7 +36,7 @@ const PermissionGetRoute = createRoute({
 					schema: PermissionListResponseSchema,
 				},
 			},
-			description: "List of permissions",
+			description: GuardDescriptions.superuserOnly("Fetch list of permissions"),
 		},
 		...commonResponse(PermissionListResponseSchema, "PermissionGetResponse", {
 			exclude: [200, 201],
@@ -50,51 +53,6 @@ PermissionRoutes.openapi(PermissionGetRoute, async (c) => {
 		c,
 		permissions,
 		"Fetched permissions successfully",
-		200,
-	);
-});
-
-// -------------------
-// GET settings/permissions/:id
-// -------------------
-const PermissionDetailRoute = createRoute({
-	method: "get",
-	path: "/{id}",
-	tags: ["Settings/Permissions"],
-	security: [{ Bearer: [] }],
-	request: {
-		params: z.object({
-			id: z.string().uuid(),
-		}),
-	},
-	responses: {
-		200: {
-			content: {
-				"application/json": {
-					schema: PermissionDetailResponseSchema,
-				},
-			},
-			description: "Permission detail",
-		},
-		...commonResponse(
-			PermissionDetailResponseSchema,
-			"PermissionDetailResponse",
-			{
-				exclude: [200, 201],
-			},
-		),
-	},
-});
-
-PermissionRoutes.openapi(PermissionDetailRoute, async (c) => {
-	const { id } = c.req.valid("param");
-	const permissionService = new PermissionService();
-	const permission = await permissionService.findOne(id);
-
-	return ResponseToolkit.success(
-		c,
-		permission,
-		"Fetched permission successfully",
 		200,
 	);
 });
@@ -123,7 +81,7 @@ const PermissionCreateRoute = createRoute({
 					schema: z.object({}),
 				},
 			},
-			description: "Permission created successfully",
+			description: GuardDescriptions.superuserOnly("Create a permission"),
 		},
 		...commonResponse(z.object({}), "PermissionCreateResponse", {
 			exclude: [200, 201],
@@ -137,6 +95,51 @@ PermissionRoutes.openapi(PermissionCreateRoute, async (c) => {
 	await permissionService.create(data);
 
 	return ResponseToolkit.created(c, {}, "Permission created successfully");
+});
+
+// -------------------
+// GET settings/permissions/:id
+// -------------------
+const PermissionDetailRoute = createRoute({
+	method: "get",
+	path: "/{id}",
+	tags: ["Settings/Permissions"],
+	security: [{ Bearer: [] }],
+	request: {
+		params: z.object({
+			id: z.string().uuid(),
+		}),
+	},
+	responses: {
+		200: {
+			content: {
+				"application/json": {
+					schema: PermissionDetailResponseSchema,
+				},
+			},
+			description: GuardDescriptions.superuserOnly("Fetch a permission"),
+		},
+		...commonResponse(
+			PermissionDetailResponseSchema,
+			"PermissionDetailResponse",
+			{
+				exclude: [200, 201],
+			},
+		),
+	},
+});
+
+PermissionRoutes.openapi(PermissionDetailRoute, async (c) => {
+	const { id } = c.req.valid("param");
+	const permissionService = new PermissionService();
+	const permission = await permissionService.findOne(id);
+
+	return ResponseToolkit.success(
+		c,
+		permission,
+		"Fetched permission successfully",
+		200,
+	);
 });
 
 // -------------------
@@ -166,7 +169,7 @@ const PermissionUpdateRoute = createRoute({
 					schema: z.object({}),
 				},
 			},
-			description: "Permission updated successfully",
+			description: GuardDescriptions.superuserOnly("Update a permission"),
 		},
 		...commonResponse(z.object({}), "PermissionUpdateResponse", {
 			exclude: [200, 201],
@@ -203,7 +206,7 @@ const PermissionDeleteRoute = createRoute({
 					schema: z.object({}),
 				},
 			},
-			description: "Permission deleted successfully",
+			description: GuardDescriptions.superuserOnly("Delete a permission"),
 		},
 		...commonResponse(z.object({}), "PermissionDeleteResponse", {
 			exclude: [200, 201],
