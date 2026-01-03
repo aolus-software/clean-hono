@@ -11,7 +11,7 @@ export const RBACSeeder = () => {
 			}),
 		);
 
-		const groupNames = ["user", "permission"];
+		const groupNames = ["user", "permission", "role"];
 		const permissionNames = ["list", "create", "detail", "edit", "delete"];
 		await Promise.all(
 			groupNames.map(async (group) => {

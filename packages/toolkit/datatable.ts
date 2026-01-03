@@ -1,5 +1,4 @@
-import { DatatableType } from "@app/api/types/datatable";
-import { SortDirection } from "@app/api/types/sort-direction";
+import { DatatableType, SortDirection } from "@packages";
 import { paginationLength } from "@default/pagination-length";
 import { defaultSort } from "@default/sort";
 import { PgColumn } from "drizzle-orm/pg-core";
