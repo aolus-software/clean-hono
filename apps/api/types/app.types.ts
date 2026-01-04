@@ -13,6 +13,7 @@ import { ISelectOptionsService } from "../modules/settings/select-options/servic
  */
 export type Variables = {
 	currentUser: UserInformation;
+	requestId: string;
 	authService: IAuthService;
 	userService: IUserService;
 	roleService: IRoleService;

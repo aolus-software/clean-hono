@@ -1,13 +1,15 @@
-export class ForbiddenError extends Error {
-	code: number;
+import { AppError } from "./base.error";
+
+export class ForbiddenError extends AppError {
+	statusCode = 403;
+	errorCode = "FORBIDDEN";
 
 	/**
-	 * Represents an error when a user is not authorized to access a resource.
+	 * Represents an error when a user is forbidden from accessing a resource.
 	 * @param {string} message - The error message.
+	 * @param {unknown} details - Additional error details
 	 */
-	constructor(message = "Forbidden") {
-		super(message);
-		this.name = "Forbidden";
-		this.code = 403;
+	constructor(message = "Forbidden", details?: unknown) {
+		super(message, details);
 	}
 }

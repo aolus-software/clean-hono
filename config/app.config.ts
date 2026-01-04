@@ -6,7 +6,7 @@ interface IAppConfig {
 	APP_URL: string;
 	APP_ENV: "development" | "staging" | "production";
 	APP_TIMEZONE: string;
-	APP_KEY: string;
+	APP_SECRET: string;
 	APP_JWT_SECRET: string;
 	APP_JWT_EXPIRES_IN: number;
 	LOG_LEVEL: "info" | "warn" | "debug" | "error";
@@ -19,7 +19,7 @@ export const AppConfig: IAppConfig = {
 	APP_URL: env.APP_URL,
 	APP_ENV: env.APP_ENV,
 	APP_TIMEZONE: env.APP_TIMEZONE,
-	APP_KEY: env.APP_KEY,
+	APP_SECRET: env.APP_SECRET,
 	APP_JWT_SECRET: env.APP_JWT_SECRET,
 	APP_JWT_EXPIRES_IN: env.APP_JWT_EXPIRES_IN,
 	LOG_LEVEL: env.LOG_LEVEL,

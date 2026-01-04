@@ -10,7 +10,7 @@ export const env = cleanEnv(process.env, {
 		default: "development",
 	}),
 	APP_TIMEZONE: str({ default: "UTC" }),
-	APP_KEY: str(),
+	APP_SECRET: str(),
 	APP_JWT_SECRET: str(),
 	APP_JWT_EXPIRES_IN: num({ default: 3600 }),
 

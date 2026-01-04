@@ -83,7 +83,8 @@ const redactSensitive = (
 
 export const createLogger = (options: LoggerOptions = {}) => {
 	const {
-		level = "info",
+		level = process.env.LOG_LEVEL ||
+			(process.env.NODE_ENV === "production" ? "info" : "debug"),
 		destination = "./storage/logs/app.log",
 		sensitiveKeys = defaultSensitiveKeys,
 	} = options;

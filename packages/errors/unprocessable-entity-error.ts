@@ -1,17 +1,15 @@
-export class UnprocessableEntityError extends Error {
-	code: number;
-	errors: {
-		[key: string]: string[];
-	}[];
+import { AppError } from "./base.error";
+
+export class UnprocessableEntityError extends AppError {
+	statusCode = 422;
+	errorCode = "VALIDATION_ERROR";
 
 	/**
-	 * Represents an error when a user is not authorized to access a resource.
+	 * Represents a validation or unprocessable entity error.
 	 * @param {string} message - The error message.
+	 * @param {unknown} details - Validation error details
 	 */
-	constructor(message: string, errors: { [key: string]: string[] }[]) {
-		super(message);
-		this.name = "UnprocessableEntityError";
-		this.code = 422;
-		this.errors = errors;
+	constructor(message: string, details?: unknown) {
+		super(message, details);
 	}
 }

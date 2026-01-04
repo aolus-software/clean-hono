@@ -1,13 +1,15 @@
-export class NotFoundError extends Error {
-	code: number;
+import { AppError } from "./base.error";
+
+export class NotFoundError extends AppError {
+	statusCode = 404;
+	errorCode = "NOT_FOUND";
 
 	/**
-	 * Represents an error when a user is not authorized to access a resource.
+	 * Represents an error when a resource is not found.
 	 * @param {string} message - The error message.
+	 * @param {unknown} details - Additional error details
 	 */
-	constructor(message: string = "Resource not found") {
-		super(message);
-		this.name = "UnprocessableEntityError";
-		this.code = 422;
+	constructor(message: string = "Resource not found", details?: unknown) {
+		super(message, details);
 	}
 }
