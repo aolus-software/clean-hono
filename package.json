@@ -55,6 +55,7 @@
 		"dayjs": "^1.11.18",
 		"dotenv": "^17.2.3",
 		"drizzle-orm": "^0.44.6",
+		"envalid": "^8.1.1",
 		"hono": "^4.9.11",
 		"hono-pino": "^0.10.3",
 		"hono-rate-limiter": "^0.5.3",

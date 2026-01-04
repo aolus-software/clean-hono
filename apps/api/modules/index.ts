@@ -1,7 +1,7 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { Scalar } from "@scalar/hono-api-reference";
 import { defaultHook } from "packages/errors";
-import HomeRoutes from "./home/route";
+import HomeRoutes from "./home/routes";
 import AuthRoutes from "./auth/routes";
 import SettingsRoutes from "./settings";
 import ProfileRoutes from "./profile/routes";

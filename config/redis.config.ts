@@ -1,3 +1,5 @@
+import { env } from "./env";
+
 interface IRedisConfig {
 	REDIS_HOST: string;
 	REDIS_PORT: number;
@@ -6,8 +8,8 @@ interface IRedisConfig {
 }
 
 export const RedisConfig: IRedisConfig = {
-	REDIS_HOST: process.env.REDIS_HOST || "localhost",
-	REDIS_PORT: Number(process.env.REDIS_PORT) || 6379,
-	REDIS_PASSWORD: process.env.REDIS_PASSWORD || undefined,
-	REDIS_DB: Number(process.env.REDIS_DB) || 0,
+	REDIS_HOST: env.REDIS_HOST || "localhost",
+	REDIS_PORT: env.REDIS_PORT,
+	REDIS_PASSWORD: env.REDIS_PASSWORD,
+	REDIS_DB: env.REDIS_DB,
 };
