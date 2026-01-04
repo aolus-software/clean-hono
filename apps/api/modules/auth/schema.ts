@@ -1,30 +1,35 @@
-import { StrongPassword } from "@default/strong-password";
 import * as z from "zod";
+import {
+	EmailSchema,
+	PasswordSchema,
+	StrongPasswordSchema,
+	TokenSchema,
+} from "@packages/schemas";
 
 export const LoginSchema = z.object({
-	email: z.email(),
-	password: z.string().max(255),
+	email: EmailSchema,
+	password: PasswordSchema,
 });
 
 export const RegisterSchema = z.object({
 	name: z.string().min(3).max(255),
-	email: z.email(),
-	password: z.string().regex(StrongPassword),
+	email: EmailSchema,
+	password: StrongPasswordSchema,
 });
 
 export const ResendVerificationSchema = z.object({
-	email: z.email(),
+	email: EmailSchema,
 });
 
 export const EmailVerificationSchema = z.object({
-	token: z.string(),
+	token: TokenSchema,
 });
 
 export const ForgotPasswordSchema = z.object({
-	email: z.email().max(255),
+	email: EmailSchema,
 });
 
 export const ResetPasswordSchema = z.object({
-	token: z.string(),
-	password: z.string().regex(StrongPassword),
+	token: TokenSchema,
+	password: StrongPasswordSchema,
 });

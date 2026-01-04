@@ -1,12 +1,18 @@
 import { z } from "@hono/zod-openapi";
+import {
+	EmailSchema,
+	NameSchema,
+	OptionalRemarksSchema,
+	PasswordSchema,
+} from "@packages/schemas";
 
 export const UpdateProfileSchema = z.object({
-	name: z.string().min(1).max(255),
-	email: z.string().email(),
-	remarks: z.string().max(255).optional(),
+	name: NameSchema,
+	email: EmailSchema,
+	remarks: OptionalRemarksSchema,
 });
 
 export const UpdatePasswordSchema = z.object({
-	current_password: z.string().min(8).max(128),
-	new_password: z.string().min(8).max(128),
+	current_password: PasswordSchema,
+	new_password: PasswordSchema,
 });

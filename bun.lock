@@ -15,6 +15,7 @@
         "drizzle-orm": "^0.44.6",
         "hono": "^4.9.11",
         "hono-pino": "^0.10.3",
+        "hono-rate-limiter": "^0.5.3",
         "hono-zod-openapi": "^1.0.1",
         "ioredis": "^5.8.1",
         "nodemailer": "^7.0.10",
@@ -493,6 +494,8 @@
     "hono": ["hono@4.9.11", "", {}, "sha512-MyJ4xop3boTyXl8bJBh4i20AAZTLM3AXUJphyrUb0CpgTKYb1N703z53XiKUKchGUpcPqiiYkiLOXA3kqK3icA=="],
 
     "hono-pino": ["hono-pino@0.10.3", "", { "dependencies": { "defu": "^6.1.4" }, "peerDependencies": { "hono": ">=4.0.0", "pino": ">=7.1.0" } }, "sha512-n0RNPIFOoq25Fg8b4D5gus4sVqI0z+8I17ibl96+p43d07UnZ0EMM/It0qSgfc7UtaC+XP5FkFmRHwBp6owsNA=="],
+
+    "hono-rate-limiter": ["hono-rate-limiter@0.5.3", "", { "peerDependencies": { "hono": "^4.10.8", "unstorage": "^1.17.3" }, "optionalPeers": ["unstorage"] }, "sha512-M0DxbVMpPELEzLi0AJg1XyBHLGJXz7GySjsPoK+gc5YeeBsdGDGe+2RvVuCAv8ydINiwlbxqYMNxUEyYfRji/A=="],
 
     "hono-zod-openapi": ["hono-zod-openapi@1.0.1", "", { "dependencies": { "@hono/zod-validator": "^0.7.3", "zod-openapi": "^5.4.2" }, "peerDependencies": { "hono": "^4.8.0", "zod": "^4.0.0" } }, "sha512-o3psEh7UJFMGWeysQ79+746ix5rd2Pv21NZ8PVzCJzwY41D3WtexR3+uAX5L5yDRaR37Xkig7PXV+G4BK87/Ag=="],
 

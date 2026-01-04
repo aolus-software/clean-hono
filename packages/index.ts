@@ -9,6 +9,7 @@ export * from "./security/encrypt";
 export * from "./security/hash";
 
 export * from "./toolkit/index";
+export * from "./schemas/index";
 
 export * from "./mail/mail.service";
 export * from "./mail/transport.mail";

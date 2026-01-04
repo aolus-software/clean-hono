@@ -9,8 +9,9 @@ import { NotFoundError } from "./not-found-error";
 import { UnprocessableEntityError } from "./unprocessable-entity-error";
 import { UnauthorizedError } from "./unauthorized-error";
 import { formatZodError } from "./formatter";
+import { Env } from "@app/api/types/app.types";
 
-export const registerException = (app: Hono) => {
+export const registerException = (app: Hono<Env>) => {
 	app.notFound((c) => {
 		return c.json(
 			{

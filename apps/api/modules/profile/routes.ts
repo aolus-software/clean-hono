@@ -2,15 +2,15 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import {
 	AuthMiddleware,
 	ResponseToolkit,
-	UserInformation,
 	ZodUserInformation,
 } from "@packages/*";
 import { commonResponse } from "@toolkit/schemas";
 import { defaultHook } from "packages/errors";
 import { UpdatePasswordSchema, UpdateProfileSchema } from "./schema";
 import { ProfileService } from "./service";
+import { Env } from "@app/api/types/app.types";
 
-const ProfileRoutes = new OpenAPIHono({ defaultHook });
+const ProfileRoutes = new OpenAPIHono<Env>({ defaultHook });
 
 // Apply auth middleware to all profile routes
 ProfileRoutes.use("*", AuthMiddleware);
@@ -39,14 +39,13 @@ const GetProfileRoute = createRoute({
 });
 
 ProfileRoutes.openapi(GetProfileRoute, (c) => {
-	const user: UserInformation | null = c.get("currentUser");
-	if (!user) {
-		return ResponseToolkit.error(c, "Unauthorized", 401);
-	}
+	// ✨ Now c.get("currentUser") is automatically typed as UserInformation!
+	// No need for manual type annotation
+	const user = c.get("currentUser");
 
 	return ResponseToolkit.success(
 		c,
-		c.get("currentUser"),
+		user,
 		"User profile retrieved successfully",
 		200,
 	);
@@ -85,10 +84,8 @@ const UpdateProfileRoute = createRoute({
 });
 
 ProfileRoutes.openapi(UpdateProfileRoute, async (c) => {
-	const user: UserInformation | null = c.get("currentUser");
-	if (!user) {
-		return ResponseToolkit.error(c, "Unauthorized", 401);
-	}
+	// ✨ Typed context - no manual annotation needed!
+	const user = c.get("currentUser");
 
 	const updateData = c.req.valid("json");
 	const result = await new ProfileService().updateUserProfile(user, updateData);
@@ -138,10 +135,8 @@ const UpdatePasswordRoute = createRoute({
 });
 
 ProfileRoutes.openapi(UpdatePasswordRoute, async (c) => {
-	const user: UserInformation | null = c.get("currentUser");
-	if (!user) {
-		return ResponseToolkit.error(c, "Unauthorized", 401);
-	}
+	// ✨ Typed context - automatic type inference!
+	const user = c.get("currentUser");
 
 	await new ProfileService().changeUserPassword(user, c.req.valid("json"));
 
