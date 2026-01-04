@@ -4,6 +4,7 @@ export * from "./default/index";
 
 export * from "./middlewares/index";
 export * from "./guards/index";
+export * from "./core/index";
 
 export * from "./security/encrypt";
 export * from "./security/hash";

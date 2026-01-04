@@ -13,9 +13,9 @@ import {
 	UserListResponseSchema,
 	UserUpdateSchema,
 } from "./schema";
-import { UserService } from "./services";
+import { Env } from "@app/api/types/app.types";
 
-const UserRoutes = new OpenAPIHono();
+const UserRoutes = new OpenAPIHono<Env>();
 
 UserRoutes.use(AuthMiddleware);
 
@@ -47,8 +47,8 @@ const UserGetRoute = createRoute({
 
 UserRoutes.openapi(UserGetRoute, async (c) => {
 	const queryParam = c.req.valid("query");
-	const userService = new UserService();
-	const users = await userService.findAll(queryParam);
+	const service = c.get("userService");
+	const users = await service.findAll(queryParam);
 
 	return ResponseToolkit.success(c, users, "Fetched users successfully", 200);
 });
@@ -89,7 +89,7 @@ const UserCreateRoute = createRoute({
 
 UserRoutes.openapi(UserCreateRoute, async (c) => {
 	const data = c.req.valid("json");
-	const userService = new UserService();
+	const userService = c.get("userService");
 	await userService.create(data);
 
 	return ResponseToolkit.created(c, {}, "User created successfully");
@@ -127,8 +127,8 @@ const UserDetailRoute = createRoute({
 
 UserRoutes.openapi(UserDetailRoute, async (c) => {
 	const { id } = c.req.valid("param");
-	const userService = new UserService();
-	const user = await userService.findOne(id);
+	const service = c.get("userService");
+	const user = await service.findOne(id);
 
 	return ResponseToolkit.success(c, user, "Fetched user successfully", 200);
 });
@@ -173,8 +173,8 @@ const UserUpdateRoute = createRoute({
 UserRoutes.openapi(UserUpdateRoute, async (c) => {
 	const { id } = c.req.valid("param");
 	const data = c.req.valid("json");
-	const userService = new UserService();
-	await userService.update(data, id);
+	const service = c.get("userService");
+	await service.update(data, id);
 
 	return ResponseToolkit.success(c, {}, "User updated successfully", 200);
 });
@@ -211,8 +211,8 @@ const UserDeleteRoute = createRoute({
 
 UserRoutes.openapi(UserDeleteRoute, async (c) => {
 	const { id } = c.req.valid("param");
-	const userService = new UserService();
-	await userService.delete(id);
+	const service = c.get("userService");
+	await service.delete(id);
 
 	return ResponseToolkit.success(c, {}, "User deleted successfully", 200);
 });

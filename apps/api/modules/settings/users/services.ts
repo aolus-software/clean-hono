@@ -7,8 +7,9 @@ import {
 } from "@postgres/repositories";
 import { z } from "@hono/zod-openapi";
 import { UserCreateSchema, UserUpdateSchema } from "./schema";
+import type { IUserService } from "../../../interfaces/user.interface";
 
-export class UserService {
+export class UserService implements IUserService {
 	async findAll(
 		queryParam: DatatableType,
 	): Promise<PaginationResponse<UserList>> {

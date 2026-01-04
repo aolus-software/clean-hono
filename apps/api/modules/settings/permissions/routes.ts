@@ -12,9 +12,9 @@ import {
 	PermissionListResponseSchema,
 	PermissionUpdateSchema,
 } from "./schema";
-import { PermissionService } from "./services";
+import { Env } from "@app/api/types/app.types";
 
-const PermissionRoutes = new OpenAPIHono();
+const PermissionRoutes = new OpenAPIHono<Env>();
 
 PermissionRoutes.use(AuthMiddleware);
 
@@ -46,7 +46,7 @@ const PermissionGetRoute = createRoute({
 
 PermissionRoutes.openapi(PermissionGetRoute, async (c) => {
 	const queryParam = c.req.valid("query");
-	const permissionService = new PermissionService();
+	const permissionService = c.get("permissionService");
 	const permissions = await permissionService.findAll(queryParam);
 
 	return ResponseToolkit.success(
@@ -91,7 +91,7 @@ const PermissionCreateRoute = createRoute({
 
 PermissionRoutes.openapi(PermissionCreateRoute, async (c) => {
 	const data = c.req.valid("json");
-	const permissionService = new PermissionService();
+	const permissionService = c.get("permissionService");
 	await permissionService.create(data);
 
 	return ResponseToolkit.created(c, {}, "Permission created successfully");
@@ -131,7 +131,7 @@ const PermissionDetailRoute = createRoute({
 
 PermissionRoutes.openapi(PermissionDetailRoute, async (c) => {
 	const { id } = c.req.valid("param");
-	const permissionService = new PermissionService();
+	const permissionService = c.get("permissionService");
 	const permission = await permissionService.findOne(id);
 
 	return ResponseToolkit.success(
@@ -180,7 +180,7 @@ const PermissionUpdateRoute = createRoute({
 PermissionRoutes.openapi(PermissionUpdateRoute, async (c) => {
 	const { id } = c.req.valid("param");
 	const data = c.req.valid("json");
-	const permissionService = new PermissionService();
+	const permissionService = c.get("permissionService");
 	await permissionService.update(data, id);
 
 	return ResponseToolkit.success(c, {}, "Permission updated successfully", 200);
@@ -216,7 +216,7 @@ const PermissionDeleteRoute = createRoute({
 
 PermissionRoutes.openapi(PermissionDeleteRoute, async (c) => {
 	const { id } = c.req.valid("param");
-	const permissionService = new PermissionService();
+	const permissionService = c.get("permissionService");
 	await permissionService.delete(id);
 
 	return ResponseToolkit.success(c, {}, "Permission deleted successfully", 200);

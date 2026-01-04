@@ -3,8 +3,9 @@ import { PermissionList, PermissionRepository } from "@postgres/repositories";
 import { z } from "@hono/zod-openapi";
 import { PermissionCreateSchema, PermissionUpdateSchema } from "./schema";
 import { NotFoundError } from "packages/errors";
+import { IPermissionService } from "./service.interface";
 
-export class PermissionService {
+export class PermissionService implements IPermissionService {
 	async findAll(
 		queryParam: DatatableType,
 	): Promise<PaginationResponse<PermissionList>> {

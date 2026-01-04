@@ -17,8 +17,9 @@ import { JWTToolkit } from "@toolkit/jwt";
 import { AppConfig } from "config/app.config";
 import { eq } from "drizzle-orm";
 import { UnprocessableEntityError } from "packages/errors";
+import type { IAuthService } from "./service.interface";
 
-export class AuthService {
+export class AuthService implements IAuthService {
 	async login(
 		email: string,
 		password: string,

@@ -13,9 +13,9 @@ import {
 	RoleListResponseSchema,
 	RoleUpdateSchema,
 } from "./schema";
-import { RoleService } from "./services";
+import { Env } from "@app/api/types/app.types";
 
-const RoleRoutes = new OpenAPIHono();
+const RoleRoutes = new OpenAPIHono<Env>();
 
 RoleRoutes.use(AuthMiddleware);
 
@@ -47,7 +47,7 @@ const RoleGetRoute = createRoute({
 
 RoleRoutes.openapi(RoleGetRoute, async (c) => {
 	const queryParam = c.req.valid("query");
-	const roleService = new RoleService();
+	const roleService = c.get("roleService");
 	const roles = await roleService.findAll(queryParam);
 
 	return ResponseToolkit.success(c, roles, "Fetched roles successfully", 200);
@@ -89,7 +89,7 @@ const RoleCreateRoute = createRoute({
 
 RoleRoutes.openapi(RoleCreateRoute, async (c) => {
 	const data = c.req.valid("json");
-	const roleService = new RoleService();
+	const roleService = c.get("roleService");
 	await roleService.create(data);
 
 	return ResponseToolkit.created(c, {}, "Role created successfully");
@@ -127,7 +127,7 @@ const RoleDetailRoute = createRoute({
 
 RoleRoutes.openapi(RoleDetailRoute, async (c) => {
 	const { id } = c.req.valid("param");
-	const roleService = new RoleService();
+	const roleService = c.get("roleService");
 	const role = await roleService.findOne(id);
 
 	return ResponseToolkit.success(c, role, "Fetched role successfully", 200);
@@ -173,7 +173,7 @@ const RoleUpdateRoute = createRoute({
 RoleRoutes.openapi(RoleUpdateRoute, async (c) => {
 	const { id } = c.req.valid("param");
 	const data = c.req.valid("json");
-	const roleService = new RoleService();
+	const roleService = c.get("roleService");
 	await roleService.update(data, id);
 
 	return ResponseToolkit.success(c, {}, "Role updated successfully", 200);
@@ -211,7 +211,7 @@ const RoleDeleteRoute = createRoute({
 
 RoleRoutes.openapi(RoleDeleteRoute, async (c) => {
 	const { id } = c.req.valid("param");
-	const roleService = new RoleService();
+	const roleService = c.get("roleService");
 	await roleService.delete(id);
 
 	return ResponseToolkit.success(c, {}, "Role deleted successfully", 200);

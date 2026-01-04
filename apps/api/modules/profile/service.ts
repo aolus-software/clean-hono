@@ -6,8 +6,9 @@ import { and, eq, isNull } from "drizzle-orm";
 import { UserRepository } from "@postgres/repositories";
 import { UnauthorizedError, UnprocessableEntityError } from "packages/errors";
 import { Cache, UserInformationCacheKey } from "@cache/*";
+import type { IProfileService } from "./service.interface";
 
-export class ProfileService {
+export class ProfileService implements IProfileService {
 	async updateUserProfile(
 		user: UserInformation,
 		data: z.infer<typeof UpdateProfileSchema>,

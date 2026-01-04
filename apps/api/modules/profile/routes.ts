@@ -39,8 +39,6 @@ const GetProfileRoute = createRoute({
 });
 
 ProfileRoutes.openapi(GetProfileRoute, (c) => {
-	// ✨ Now c.get("currentUser") is automatically typed as UserInformation!
-	// No need for manual type annotation
 	const user = c.get("currentUser");
 
 	return ResponseToolkit.success(
@@ -84,11 +82,10 @@ const UpdateProfileRoute = createRoute({
 });
 
 ProfileRoutes.openapi(UpdateProfileRoute, async (c) => {
-	// ✨ Typed context - no manual annotation needed!
 	const user = c.get("currentUser");
-
 	const updateData = c.req.valid("json");
-	const result = await new ProfileService().updateUserProfile(user, updateData);
+	const service = c.get("profileService");
+	const result = await service.updateUserProfile(user, updateData);
 
 	return ResponseToolkit.success(
 		c,

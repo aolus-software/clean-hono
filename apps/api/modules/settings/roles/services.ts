@@ -2,8 +2,9 @@ import { DatatableType, PaginationResponse } from "@packages/*";
 import { RoleRepository, RoleList, RoleDetail } from "@postgres/repositories";
 import { z } from "@hono/zod-openapi";
 import { RoleCreateSchema, RoleUpdateSchema } from "./schema";
+import { IRoleService } from "./service.interface";
 
-export class RoleService {
+export class RoleService implements IRoleService {
 	async findAll(
 		queryParam: DatatableType,
 	): Promise<PaginationResponse<RoleList>> {

@@ -5,10 +5,10 @@ import {
 	PermissionSelectOptionsResponseSchema,
 	RoleSelectOptionsResponseSchema,
 } from "./schema";
-import { SelectOptionsService } from "./services";
 import { AuthMiddleware } from "@packages/*";
+import { Env } from "@app/api/types/app.types";
 
-const SelectOptionsRoutes = new OpenAPIHono();
+const SelectOptionsRoutes = new OpenAPIHono<Env>();
 
 SelectOptionsRoutes.use(AuthMiddleware);
 
@@ -40,7 +40,7 @@ const PermissionSelectOptionsRoute = createRoute({
 });
 
 SelectOptionsRoutes.openapi(PermissionSelectOptionsRoute, async (c) => {
-	const service = new SelectOptionsService();
+	const service = c.get("settingSelectOption");
 	const options = await service.getPermissionOptions();
 
 	return ResponseToolkit.success(
@@ -79,7 +79,7 @@ const RoleSelectOptionsRoute = createRoute({
 });
 
 SelectOptionsRoutes.openapi(RoleSelectOptionsRoute, async (c) => {
-	const service = new SelectOptionsService();
+	const service = c.get("settingSelectOption");
 	const options = await service.getRoleOptions();
 
 	return ResponseToolkit.success(

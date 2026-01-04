@@ -7,9 +7,16 @@ import bootstrap from "./modules";
 import { registerException } from "packages/errors";
 import { secureHeaders } from "hono/secure-headers";
 import { rateLimiter } from "hono-rate-limiter";
+import { compress } from "hono/compress";
+import { bodyLimit } from "hono/body-limit";
 import type { Env } from "./types/app.types";
+import { bootstrap as bootstrapServices } from "./bootstrap";
+import { diMiddleware } from "packages/middlewares/di.middleware";
 
 const app = new Hono<Env>();
+
+// Bootstrap services
+bootstrapServices();
 
 app.use(
 	"*",
@@ -19,9 +26,11 @@ app.use(
 );
 
 // Bind services to context===========================================
-app.use("*", async (c, next) => {
-	await next();
-});
+app.use("*", diMiddleware);
+
+// Compression and body size limits =========================================
+app.use("*", compress());
+app.use("*", bodyLimit({ maxSize: 100 * 1024 })); // 100KB
 
 // Rate limit, cors, helmet =======================================================
 app.use(

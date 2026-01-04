@@ -7,14 +7,14 @@ import {
 	ResendVerificationSchema,
 	ResetPasswordSchema,
 } from "./schema";
-import { AuthService } from "./service";
 
 import { ResponseToolkit } from "@toolkit/response";
 import { defaultHook } from "packages/errors";
 import { commonResponse } from "@toolkit/schemas";
 import { ZodUserInformation } from "@packages/*";
+import { Env } from "@app/api/types/app.types";
 
-const AuthRoutes = new OpenAPIHono({ defaultHook });
+const AuthRoutes = new OpenAPIHono<Env>({ defaultHook });
 
 // --------------------------------
 // POST /auth/login
@@ -51,7 +51,8 @@ const loginRoute = createRoute({
 
 AuthRoutes.openapi(loginRoute, async (c) => {
 	const { email, password } = c.req.valid("json");
-	const result = await new AuthService().login(email, password);
+	const service = c.get("authService");
+	const result = await service.login(email, password);
 	return ResponseToolkit.success<z.infer<typeof loginDataSchema>, 200>(
 		c,
 		result,
@@ -89,11 +90,13 @@ const registerRoute = createRoute({
 
 AuthRoutes.openapi(registerRoute, async (c) => {
 	const { name, email, password } = c.req.valid("json");
-	await new AuthService().register({
+	const service = c.get("authService");
+	await service.register({
 		name,
 		email,
 		password,
 	});
+
 	return ResponseToolkit.success<null, 201>(
 		c,
 		null,
@@ -130,7 +133,8 @@ const resendVerificationRoute = createRoute({
 
 AuthRoutes.openapi(resendVerificationRoute, async (c) => {
 	const { email } = c.req.valid("json");
-	await new AuthService().resendVerification({
+	const service = c.get("authService");
+	await service.resendVerification({
 		email,
 	});
 
@@ -165,9 +169,8 @@ const verifyEmailRoute = createRoute({
 
 AuthRoutes.openapi(verifyEmailRoute, async (c) => {
 	const { token } = c.req.valid("json");
-	await new AuthService().verifyEmail({
-		token,
-	});
+	const service = c.get("authService");
+	await service.verifyEmail({ token });
 
 	return ResponseToolkit.success<null, 200>(c, null, "Email verified", 200);
 });
@@ -200,9 +203,11 @@ const forgotPasswordRoute = createRoute({
 
 AuthRoutes.openapi(forgotPasswordRoute, async (c) => {
 	const { email } = c.req.valid("json");
-	await new AuthService().forgotPassword({
+	const service = c.get("authService");
+	await service.forgotPassword({
 		email,
 	});
+
 	return ResponseToolkit.success<null, 200>(
 		c,
 		null,
@@ -240,10 +245,12 @@ const resetPasswordRoute = createRoute({
 
 AuthRoutes.openapi(resetPasswordRoute, async (c) => {
 	const { token, password } = c.req.valid("json");
-	await new AuthService().resetPassword({
+	const service = c.get("authService");
+	await service.resetPassword({
 		token,
 		password,
 	});
+
 	return ResponseToolkit.success<null, 200>(
 		c,
 		null,
