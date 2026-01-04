@@ -1,326 +1,381 @@
-# Clean Hono Starter Template
+# Clean Hono
 
-A clean, production-ready starter template for building modern web applications with [Hono](https://hono.dev/) and [Bun](https://bun.sh/). This template provides a well-structured monorepo setup with TypeScript, database integration, Docker support, and development best practices.
+A production-ready starter template for building scalable web applications with [Hono](https://hono.dev/) and [Bun](https://bun.sh/). Built with clean architecture principles, TypeScript, and modern development practices.
 
-## 🚀 Features
+## Features
 
-### Core Framework & Runtime
+### Core Stack
 
-- **⚡ Hono Framework**: Fast, lightweight, and modern web framework for Bun
-- **🔷 TypeScript**: Full TypeScript support with strict configuration
-- **📦 Bun Runtime**: Lightning-fast JavaScript runtime and package managerk
+- Hono framework with Bun runtime
+- TypeScript with strict type checking
+- Modular monorepo structure
+- Clean architecture with separation of concerns
 
-### Architecture & Structure
+### Database & Storage
 
-- **🏗️ Monorepo Structure**: Organized with `apps`, `packages`, and `infra` directories
-- **🔄 Worker Support**: Background job processing (BullMQ or custom workers)
-- **🎯 Clean Architecture**: Separation of concerns with modular design
+- PostgreSQL with Drizzle ORM
+- ClickHouse for analytics and time-series data
+- Redis for caching and session management
+- Type-safe database operations and migrations
+- Database seeding support
 
-### Database & ORM
+### API Features
 
-- **🗄️ PostgreSQL**: Production-ready relational database
-- **🔷 Drizzle ORM**: Type-safe database operations and migrations
-- **🌱 Database Seeding**: Pre-configured seeding with drizzle-seed
+- OpenAPI/Swagger documentation with Scalar UI
+- Zod schema validation
+- JWT authentication
+- RBAC (Role-Based Access Control) with guards
+- CORS configuration
+- Rate limiting
+- Request/response logging with Pino
+- Performance monitoring middleware
+- Request ID tracking
+- Body size limits
+- Secure headers
 
-### Cache & Queue
+### Background Processing
 
-- **⚡ Redis Integration**: High-performance caching and session management (IORedis)
-- **📬 BullMQ**: Robust queue system for background jobs and task processing
+- BullMQ for job queues
+- Worker processes for background tasks
+- Email queue system
 
-### Authentication & Security
+### Security
 
-- **🔐 JWT Authentication**: Secure token-based authentication (with Hono middlewares)
-- **🔒 Password Hashing**: Bcrypt integration for secure password storage
-- **🔑 Encryption**: Crypto-JS for data encryption and decryption
+- Bcrypt password hashing
+- Crypto-JS encryption/decryption
+- Authentication middleware
+- Permission and role guards
+- Secure headers with Helmet
 
-### API & Middleware
+### Development
 
-- **🌐 CORS Support**: Configurable cross-origin resource sharing
-- **📝 Request Validation**: Type-safe validation (e.g., Zod, VineJS, or similar)
-- **📊 Logging**: Structured logging with Pino and pino-pretty
+- Hot reload with Bun watch mode
+- Docker and Docker Compose support
+- ESLint and Prettier configuration
+- Husky for Git hooks
+- Makefile for common tasks
+- Concurrent development workflows
 
-### Email & Notifications
+## Prerequisites
 
-- **📧 Email Support**: Nodemailer integration for sending emails
-- **✉️ Template Ready**: Pre-configured email service layer
+- Bun (latest version)
+- PostgreSQL (v14 or higher)
+- ClickHouse
+- Redis (v6 or higher)
+- Docker (optional)
+- Make (optional)
 
-### Development Tools
+## Installation
 
-- **🐳 Docker Support**: Complete containerization with Docker and Docker Compose
-- **🔧 Hot Reload**: Fast development with Bun's watch mode
-- **🎨 Code Quality**: ESLint, Prettier, and Husky for consistent code formatting
-- **⏰ Date Handling**: DayJS for modern date/time operations
-- **🔄 Concurrency**: Run multiple services simultaneously with concurrently
-
-### Environment & Configuration
-
-- **🌍 Environment Variables**: Dotenv for configuration management
-- **⚙️ Multi-Environment**: Support for development, staging, and production
-- **🕐 Timezone Support**: Configurable timezone settings
-
-## 📋 Prerequisites
-
-- [Bun](https://bun.sh/) (latest version)
-- [PostgreSQL](https://www.postgresql.org/) (v14 or higher)
-- [Redis](https://redis.io/) (v6 or higher)
-- [Docker](https://www.docker.com/) (optional, for containerization)
-- [Make](https://www.gnu.org/software/make/) (optional, for using Makefile commands)
-
-## 🛠️ Installation
-
-1. **Clone the repository**
-
-   ```bash
-   git clone https://github.com/aolus-software/clean-hono.git
-   cd clean-hono
-   ```
-
-2. **Install dependencies**
-
-   ```bash
-   bun install
-   ```
-
-3. **Set up environment variables**
-
-   ```bash
-   cp .env.example .env
-   # Edit .env with your configuration
-   ```
-
-4. **Start development server**
-   ```bash
-   bun dev
-   ```
-
-## 🏃 Quick Start
-
-### Using Bun (Recommended)
+1. Clone the repository
 
 ```bash
-# Install dependencies
-bun install
-
-# Start development server
-bun dev
-
-# Build for production
-bun run build
-
-# Start production server
-bun start
+git clone https://github.com/aolus-software/clean-hono.git
+cd clean-hono
 ```
 
-### Using Make Commands
+2. Install dependencies
 
 ```bash
-# View all available commands
+bun install
+```
+
+3. Configure environment variables
+
+```bash
+cp .env.example .env
+# Edit .env with your configuration
+```
+
+4. Set up databases
+
+```bash
+make db-migrate      # Run PostgreSQL migrations
+make db-seed         # Seed database
+make migrate-clickhouse  # Run ClickHouse migrations
+```
+
+5. Start development server
+
+```bash
+make dev-all         # Start API and worker
+```
+
+## Quick Start
+
+### Using Bun Scripts
+
+```bash
+# API Server
+bun run dev:api      # Development
+bun run build:api    # Build
+bun run start:api    # Production
+
+# Worker
+bun run dev:worker   # Development
+bun run build:worker # Build
+bun run start:worker # Production
+
+# Run both
+bun run dev:all      # Development mode
+bun run build:all    # Build all
+bun run start:all    # Production mode
+```
+
+### Using Make
+
+```bash
+# View all commands
 make help
 
-# Development Commands
-make dev-api          # Start API development server with hot reload
-make dev-server       # Start SERVER development server with hot reload
-make dev-worker       # Start WORKER development with hot reload
-make dev-all          # Run server and worker in dev mode concurrently
+# Development
+make dev-api         # Start API with hot reload
+make dev-worker      # Start worker with hot reload
+make dev-all         # Run both concurrently
 
-# Build Commands
-make build-api        # Build the API application
-make build-server     # Build the SERVER application
-make build-worker     # Build the WORKER application
-make build-all        # Build server and worker concurrently
+# Production
+make start-api       # Start API server
+make start-worker    # Start worker service
+make start-all       # Run both concurrently
 
-# Production Commands
-make start-api        # Start the API production server
-make start-server     # Start the SERVER production server
-make start-worker     # Start the WORKER production service
-make start-all        # Run server and worker in production concurrently
+# Database
+make db-generate     # Generate migration files
+make db-migrate      # Run pending migrations
+make db-push         # Push schema to database (dev)
+make db-studio       # Open Drizzle Studio
+make db-seed         # Seed database
+
+# ClickHouse
+make migrate-clickhouse        # Run migrations
+make migrate-clickhouse-status # Check migration status
 
 # Code Quality
-make lint             # Run ESLint
-make format           # Format code with Prettier
-
-# Database Commands
-make db-generate      # Generate migration files
-make db-migrate       # Run pending migrations
-make db-push          # Push schema to database (dev only)
-make db-pull          # Pull schema from database
-make db-studio        # Open Drizzle Studio
-make db-drop          # Drop all tables (dangerous!)
-make db-seed          # Run database seeder
-
-# Combined Workflows
-make fresh            # Drop database, push schema, and seed
-make reset            # Generate migrations, migrate, and seed
+make lint            # Run ESLint
+make format          # Format with Prettier
 ```
 
 ### Using Docker
 
 ```bash
-# Build and run with Docker Compose
-docker-compose up --build
-
-# Run in detached mode
-docker-compose up -d
+docker-compose up --build    # Build and run
+docker-compose up -d         # Run in background
+docker-compose down          # Stop services
 ```
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 clean-hono/
-├── apps/                    # Application modules
-│   ├── apis/               # API application (Hono-based)
-│   │   ├── errors/         # Custom error definitions
-│   │   ├── handlers/       # Request handlers
-│   │   ├── middleware/     # API middleware
-│   │   ├── repositories/   # Data access layer
-│   │   ├── routes/         # API routes
-│   │   ├── services/       # Business logic
-│   │   └── types/          # TypeScript type definitions
-│   └── worker/             # Background job workers
-├── packages/               # Shared packages and utilities
-│   ├── cache/             # Caching utilities
-│   ├── config/            # Configuration management
-│   ├── db/                # Database connectors
-│   │   ├── clickhouse/    # ClickHouse integration
-│   │   └── postgres/      # PostgreSQL integration
-│   ├── default/           # Default configurations
-│   ├── event/             # Event handling
-│   │   ├── queue/         # Queue management
-│   │   └── worker/        # Worker utilities
-│   ├── guards/            # Authentication guards
-│   ├── logger/            # Logging utilities
-│   ├── mail/              # Email service
-│   │   └── templates/     # Email templates
-│   ├── redis/             # Redis integration
-│   ├── security/          # Security utilities
-│   └── toolkit/           # Common tools and helpers
-├── infra/                 # Infrastructure and deployment
-│   ├── migrations/        # Database migrations
-│   │   └── meta/          # Migration metadata
-│   └── seed/              # Database seeding scripts
-├── storage/               # File storage
-│   └── logs/              # Application logs
-├── docs/                  # Documentation
-│   └── images/            # Documentation images
-├── .github/               # GitHub workflows and templates
-├── .husky/                # Git hooks
-├── Dockerfile             # Container configuration
-├── docker-compose.yml     # Multi-service setup
-├── drizzle.config.ts      # Database configuration
-├── Makefile               # Build and deployment commands
-└── package.json           # Project dependencies and scripts
+├── apps/                    # Applications
+│   ├── api/                # Main API application
+│   │   ├── app.ts         # Hono app configuration
+│   │   ├── bootstrap.ts   # Service initialization
+│   │   ├── serve.ts       # Server entry point
+│   │   ├── modules/       # Feature modules
+│   │   │   ├── auth/      # Authentication
+│   │   │   ├── home/      # Home routes
+│   │   │   ├── profile/   # User profiles
+│   │   │   └── settings/  # Settings
+│   │   └── types/         # Type definitions
+│   └── worker/            # Background workers
+│       ├── queue/         # Queue handlers
+│       └── worker/        # Worker implementations
+├── config/                # Application configuration
+│   ├── app.config.ts      # App settings
+│   ├── cors.config.ts     # CORS settings
+│   ├── database.config.ts # Database config
+│   ├── mail.config.ts     # Email config
+│   ├── redis.config.ts    # Redis config
+│   └── env.ts             # Environment validation
+├── infra/                 # Infrastructure
+│   ├── clickhouse/        # ClickHouse setup
+│   │   ├── client/        # Client configuration
+│   │   ├── migrations/    # Migrations
+│   │   ├── repositories/  # Data access
+│   │   └── services/      # Business logic
+│   ├── postgres/          # PostgreSQL setup
+│   │   ├── migrations/    # Migrations
+│   │   ├── repositories/  # Data access
+│   │   └── schema/        # Drizzle schemas
+│   ├── redis/             # Redis client
+│   └── seed/              # Database seeding
+├── packages/              # Shared packages
+│   ├── cache/            # Caching utilities
+│   ├── core/             # Core functionality
+│   ├── default/          # Default values
+│   ├── errors/           # Error handling
+│   ├── guards/           # Auth guards
+│   ├── logger/           # Logging
+│   ├── mail/             # Email service
+│   ├── middlewares/      # Middleware functions
+│   ├── schemas/          # Validation schemas
+│   ├── security/         # Security utilities
+│   ├── toolkit/          # Helper functions
+│   └── types/            # Shared types
+├── storage/              # Storage directory
+│   └── logs/            # Application logs
+├── docs/                 # Documentation
+│   ├── guards/          # Guard documentation
+│   └── validation/      # Validation docs
+└── todos/                # Project todos
 ```
 
-## 🗄️ Database Setup
+## Environment Configuration
 
-This template uses Drizzle ORM for database operations:
+Required environment variables (see `.env.example`):
 
-1. **Configure your database** in `.env`:
+### Application
 
-   ```env
-   DATABASE_URL="your-database-connection-string"
-   ```
-
-2. **Generate database migrations**:
-
-   ```bash
-   bun run db:generate
-   ```
-
-3. **Run migrations**:
-   ```bash
-   bun run db:migrate
-   ```
-
-## 🧪 Development
-
-### Code Quality
-
-- **ESLint**: Configured for TypeScript and modern JavaScript
-- **Prettier**: Automatic code formatting
-- **Husky**: Pre-commit hooks for code quality
-
-### Available Scripts
-
-```bash
-# Server Commands
-bun run dev:server      # Start development server with hot reload
-bun run start:server    # Start production server
-bun run build:server    # Build server for production
-
-# Worker Commands
-bun run dev:worker      # Start development worker with hot reload
-bun run start:worker    # Start production worker
-bun run build:worker    # Build worker for production
-
-# API Commands (alias for server)
-bun run dev:api         # Start development API with hot reload
-bun run start:api       # Start production API
-bun run build:api       # Build API for production
-
-# Run All Services
-bun run dev:all         # Start both server and worker in development mode
-bun run start:all       # Start both server and worker in production mode
-bun run build:all       # Build both server and worker
-
-# Code Quality
-bun run lint            # Run ESLint
-bun run format          # Format code with Prettier
-
-# Database
-bun run seed            # Seed database with initial data
+```env
+APP_NAME=Hono App
+APP_PORT=3000
+APP_URL=http://localhost:3000
+APP_ENV=development
+APP_TIMEZONE=UTC
+APP_SECRET=your-app-secret
+APP_JWT_SECRET=your-jwt-secret
+APP_JWT_EXPIRES_IN=3600
 ```
 
-## 🐳 Docker Deployment
+### Database
 
-### Single Container
-
-```bash
-# Build image
-docker build -t clean-hono .
-
-# Run container
-docker run -p 3000:3000 clean-hono
+```env
+DATABASE_URL=postgresql://user:password@localhost:5432/database
 ```
 
-### Multi-Service Setup
+### ClickHouse
 
-```bash
-# Start all services
-docker-compose up
-
-# Scale specific services
-docker-compose up --scale app=3
+```env
+CLICKHOUSE_HOST=http://localhost:8123
+CLICKHOUSE_USER=default
+CLICKHOUSE_PASSWORD=
+CLICKHOUSE_DATABASE=analytics
 ```
 
-## 🤝 Contributing
+### Redis
+
+```env
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=
+REDIS_DB=0
+```
+
+### Email
+
+```env
+MAIL_HOST=smtp.mailtrap.io
+MAIL_PORT=2525
+MAIL_USER=your-user
+MAIL_PASSWORD=your-password
+MAIL_FROM=noreply@example.com
+```
+
+## API Documentation
+
+Once the server is running, access the interactive API documentation:
+
+- Swagger UI: `http://localhost:3000/docs`
+- OpenAPI JSON: `http://localhost:3000/openapi.json`
+
+## Module Structure
+
+Each module in `apps/api/modules/` follows a consistent pattern:
+
+- Routes definition and registration
+- Request/response schemas with Zod
+- OpenAPI documentation
+- Middleware and guards integration
+
+Example modules:
+
+- `auth/` - Authentication endpoints (login, register, logout)
+- `home/` - Public endpoints
+- `profile/` - User profile management
+- `settings/` - Application settings
+
+## Guards and Permissions
+
+The template includes a robust guard system:
+
+### Role Guard
+
+```typescript
+import { roleGuard } from "@packages/guards";
+
+// Require admin role
+app.get("/admin", roleGuard("admin"), (c) => {
+	// Handler
+});
+```
+
+### Permission Guard
+
+```typescript
+import { permissionGuard } from "@packages/guards";
+
+// Require specific permission
+app.post("/posts", permissionGuard("posts.create"), (c) => {
+	// Handler
+});
+```
+
+## Error Handling
+
+Centralized error handling with custom error classes:
+
+- `ForbiddenError` - 403 Forbidden
+- `NotFoundError` - 404 Not Found
+- `UnauthorizedError` - 401 Unauthorized
+- `UnprocessableEntityError` - 422 Validation Error
+
+Example:
+
+```typescript
+import { NotFoundError } from "@packages/errors";
+
+throw new NotFoundError("User not found");
+```
+
+## Background Jobs
+
+Create workers in `apps/worker/queue/`:
+
+```typescript
+export const sendEmailQueue = async (job: Job) => {
+	const { to, subject, html } = job.data;
+	// Send email logic
+};
+```
+
+## Contributing
 
 1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
+2. Create a feature branch (`git checkout -b feature/name`)
+3. Commit your changes (`git commit -m 'Add feature'`)
+4. Push to the branch (`git push origin feature/name`)
 5. Open a Pull Request
 
-### Code Style Guidelines
+## License
 
-- Follow the existing code style
-- Run `bun lint` and `bun format` before committing
-- Write meaningful commit messages
-- ~Add tests for new features~
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 📐 Architecture Diagram
+## Support
 
-<!-- ![Architecture Diagram](./docs/images/simple-diagram.png) -->
+For issues and questions:
+
+- Open an issue on GitHub
+- Check the documentation in the `docs/` directory
 
 <!-- _Clean Architecture: Separation between API layer, Application services, and Infrastructure components_ -->
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - [Hono](https://hono.dev/) - The web framework
 - [Bun](https://bun.sh/) - JavaScript runtime and package manager
 - [Drizzle ORM](https://orm.drizzle.team/) - Type-safe database toolkit
 
-## 📞 Support
+## Support
 
 If you have any questions or issues, please:
 
@@ -329,4 +384,4 @@ If you have any questions or issues, please:
 
 ---
 
-Made with ❤️ by [Aolus Software](https://github.com/aolus-software)
+Made by [Aolus Software](https://github.com/aolus-software)
