@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import { transporter } from "./transport.mail";
 import { AppConfig, MailConfig } from "@config";
-import { logger } from "packages/logger/logger";
+import { logger } from "@utils";
 
 export interface EmailOptions {
 	to: string;

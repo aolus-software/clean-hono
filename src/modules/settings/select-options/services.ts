@@ -2,7 +2,7 @@ import {
 	PermissionRepository,
 	PermissionSelectOptions,
 	RoleRepository,
-} from "@postgres/repositories";
+} from "@database";
 import { ISelectOptionsService } from "./service.interface";
 
 export class SelectOptionsService implements ISelectOptionsService {
