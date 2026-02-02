@@ -1,4 +1,4 @@
-import { db, password_reset_tokensTable } from "infra/postgres/index";
+import { db, password_reset_tokensTable } from "@database";
 import { eq } from "drizzle-orm";
 import { DbTransaction } from ".";
 

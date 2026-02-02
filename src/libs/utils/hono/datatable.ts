@@ -1,6 +1,5 @@
-import { DatatableType, SortDirection } from "@packages";
-import { paginationLength } from "@default/pagination-length";
-import { defaultSort } from "@default/sort";
+import { DatatableType, SortDirection } from "@types";
+import { paginationLength, DefaultSort } from "@default";
 import { PgColumn } from "drizzle-orm/pg-core";
 import { Context } from "hono";
 
@@ -13,7 +12,7 @@ export class DatatableToolkit {
 			? parseInt(query.perPage, 10)
 			: paginationLength;
 		const search: string | null = query.search ? query.search : null;
-		const orderBy: string = query.sort ? query.sort : defaultSort;
+		const orderBy: string = query.sort ? query.sort : DefaultSort;
 		const orderDirection: SortDirection = query.sortDirection
 			? (query.sortDirection as SortDirection)
 			: "desc";

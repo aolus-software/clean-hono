@@ -1,9 +1,9 @@
-import { db, permissionsTable } from "infra/postgres/index";
-import { defaultSort } from "@default/sort";
+import { db, permissionsTable } from "@database";
+import { DefaultSort } from "@default";
 import { and, asc, desc, eq, ilike, not, or, SQL } from "drizzle-orm";
 import { DbTransaction } from ".";
-import { DatatableType, PaginationResponse, SortDirection } from "@packages/*";
-import { NotFoundError, UnprocessableEntityError } from "packages/errors";
+import { DatatableType, PaginationResponse, SortDirection } from "@types";
+import { NotFoundError, UnprocessableEntityError } from "@errors";
 
 export type PermissionList = {
 	id: string;
@@ -38,7 +38,7 @@ export const PermissionRepository = () => {
 			const page: number = queryParam.page || 1;
 			const limit: number = queryParam.limit || 10;
 			const search: string | null = queryParam.search || null;
-			const orderBy: string = queryParam.sort ? queryParam.sort : defaultSort;
+			const orderBy: string = queryParam.sort ? queryParam.sort : DefaultSort;
 			const orderDirection: SortDirection = queryParam.sortDirection
 				? queryParam.sortDirection
 				: "desc";

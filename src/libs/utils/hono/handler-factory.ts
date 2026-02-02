@@ -1,5 +1,5 @@
 import { Context } from "hono";
-import type { Env } from "@app/api/types/app.types";
+import type { Env } from "@types";
 
 /**
  * Handler factory for creating type-safe Hono route handlers
