@@ -8,7 +8,7 @@ import { registerException } from "packages/errors";
 import { secureHeaders } from "hono/secure-headers";
 import { rateLimiter } from "hono-rate-limiter";
 import { bodyLimit } from "hono/body-limit";
-import type { Env } from "./types/app.types";
+import type { Env } from "./libs/types/app.types";
 import { bootstrap as bootstrapServices } from "./bootstrap";
 import { diMiddleware } from "packages/middlewares/di.middleware";
 import { requestIdMiddleware } from "@packages/middlewares/request-id.middleware";
