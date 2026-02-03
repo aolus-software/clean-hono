@@ -2,17 +2,17 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { corsConfig } from "@config";
 import { pinoLogger } from "hono-pino";
-import { logger, ResponseToolkit } from "@packages";
-import bootstrap from "./modules";
-import { registerException } from "packages/errors";
+import bootstrap from "@modules";
 import { secureHeaders } from "hono/secure-headers";
 import { rateLimiter } from "hono-rate-limiter";
 import { bodyLimit } from "hono/body-limit";
-import type { Env } from "./libs/types/app.types";
 import { bootstrap as bootstrapServices } from "./bootstrap";
-import { diMiddleware } from "packages/middlewares/di.middleware";
-import { requestIdMiddleware } from "@packages/middlewares/request-id.middleware";
-import { performanceMiddleware } from "@packages/middlewares/performance.middleware";
+import { Env } from "@types";
+import { requestIdMiddleware } from "@hono-libs/middlewares/index";
+import { logger, ResponseToolkit } from "@utils";
+import { performanceMiddleware } from "@hono-libs/middlewares/index";
+import { diMiddleware } from "@hono-libs/middlewares/index";
+import { registerException } from "@hono-libs/errors/error.handler";
 
 const app = new Hono<Env>();
 

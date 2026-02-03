@@ -1,14 +1,10 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import {
-	AuthMiddleware,
-	ResponseToolkit,
-	ZodUserInformation,
-} from "@packages/*";
-import { commonResponse } from "@toolkit/schemas";
-import { defaultHook } from "packages/errors";
+import { commonResponse, ResponseToolkit } from "@utils";
+import { defaultHook } from "@errors";
 import { UpdatePasswordSchema, UpdateProfileSchema } from "./schema";
 import { ProfileService } from "./service";
-import { Env } from "@app/api/types/app.types";
+import { Env, ZodUserInformation } from "@types";
+import { AuthMiddleware } from "@hono-libs/middlewares/index";
 
 const ProfileRoutes = new OpenAPIHono<Env>({ defaultHook });
 

@@ -1,8 +1,5 @@
-import {
-	PermissionRepository,
-	PermissionSelectOptions,
-	RoleRepository,
-} from "@database";
+import { PermissionRepository, RoleRepository } from "@database";
+import { PermissionSelectOptions } from "@types";
 import { ISelectOptionsService } from "./service.interface";
 
 export class SelectOptionsService implements ISelectOptionsService {

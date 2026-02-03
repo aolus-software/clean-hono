@@ -1,8 +1,8 @@
-import { DatatableType, PaginationResponse } from "@packages/*";
-import { PermissionList, PermissionRepository } from "@postgres/repositories";
+import { DatatableType, PaginationResponse, PermissionList } from "@types";
+import { PermissionRepository } from "@database";
 import { z } from "@hono/zod-openapi";
 import { PermissionCreateSchema, PermissionUpdateSchema } from "./schema";
-import { NotFoundError } from "packages/errors";
+import { NotFoundError } from "@errors";
 import { IPermissionService } from "./service.interface";
 
 export class PermissionService implements IPermissionService {

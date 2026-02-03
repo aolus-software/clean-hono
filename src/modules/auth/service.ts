@@ -1,23 +1,19 @@
-import { sendEmailQueue } from "@app/worker/queue/send-email.queue";
 import {
-	Hash,
-	StrToolkit,
-	UserInformation,
-	verificationTokenLifetime,
-} from "@packages/*";
-import {
+	UserRepository,
 	db,
 	email_verificationsTable,
 	password_reset_tokensTable,
 	usersTable,
-} from "@postgres/index";
-import { UserRepository } from "@postgres/repositories";
-import { ForgotPasswordRepository } from "@postgres/repositories/forgot-password.repository";
-import { JWTToolkit } from "@toolkit/jwt";
-import { AppConfig } from "config/app.config";
+} from "@database";
+import { JWTToolkit, Hash, StrToolkit } from "@utils";
+import { AppConfig } from "@config";
 import { eq } from "drizzle-orm";
-import { UnprocessableEntityError } from "packages/errors";
 import type { IAuthService } from "./service.interface";
+import { UserInformation } from "@types";
+import { UnprocessableEntityError } from "@errors";
+import { verificationTokenLifetime } from "@default";
+import { sendEmailQueue } from "@bull";
+import { ForgotPasswordRepository } from "@database";
 
 export class AuthService implements IAuthService {
 	async login(

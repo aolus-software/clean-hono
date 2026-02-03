@@ -1,5 +1,4 @@
-import { DatatableType, PaginationResponse } from "@packages/*";
-import { PermissionList } from "@postgres/repositories";
+import { DatatableType, PaginationResponse, PermissionList } from "@types";
 import { PermissionCreateSchema, PermissionUpdateSchema } from "./schema";
 import type { z } from "@hono/zod-openapi";
 

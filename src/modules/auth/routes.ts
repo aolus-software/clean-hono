@@ -8,11 +8,11 @@ import {
 	ResetPasswordSchema,
 } from "./schema";
 
-import { ResponseToolkit } from "@toolkit/response";
-import { defaultHook } from "packages/errors";
-import { commonResponse } from "@toolkit/schemas";
-import { ZodUserInformation } from "@packages/*";
-import { Env } from "@app/api/types/app.types";
+import { commonResponse, ResponseToolkit } from "@utils";
+import { defaultHook } from "@errors";
+// import { commonResponse } from "@toolkit/schemas";
+// import { ZodUserInformation } from "@packages/*";
+import { Env, ZodUserInformation } from "@types";
 
 const AuthRoutes = new OpenAPIHono<Env>({ defaultHook });
 

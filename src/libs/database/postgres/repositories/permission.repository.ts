@@ -2,25 +2,14 @@ import { db, permissionsTable } from "@database";
 import { DefaultSort } from "@default";
 import { and, asc, desc, eq, ilike, not, or, SQL } from "drizzle-orm";
 import { DbTransaction } from ".";
-import { DatatableType, PaginationResponse, SortDirection } from "@types";
+import {
+	DatatableType,
+	PaginationResponse,
+	PermissionList,
+	PermissionSelectOptions,
+	SortDirection,
+} from "@types";
 import { NotFoundError, UnprocessableEntityError } from "@errors";
-
-export type PermissionList = {
-	id: string;
-	name: string;
-	group: string;
-	created_at: Date;
-	updated_at: Date;
-};
-
-export type PermissionSelectOptions = {
-	group: string;
-	permissions: {
-		id: string;
-		name: string;
-		group: string;
-	}[];
-};
 
 export const PermissionRepository = () => {
 	const dbInstance = db;
@@ -109,13 +98,23 @@ export const PermissionRepository = () => {
 				offset,
 			});
 
-			const data: PermissionList[] = rawData.map((item) => ({
-				id: item.id,
-				name: item.name,
-				group: item.group,
-				created_at: item.createdAt,
-				updated_at: item.updatedAt,
-			}));
+			type PermissionQueryResult = {
+				id: string;
+				name: string;
+				group: string;
+				createdAt: Date;
+				updatedAt: Date;
+			};
+
+			const data: PermissionList[] = rawData.map(
+				(item: PermissionQueryResult) => ({
+					id: item.id,
+					name: item.name,
+					group: item.group,
+					created_at: item.createdAt,
+					updated_at: item.updatedAt,
+				}),
+			);
 
 			const totalCount = await database.$count(
 				permissionsTable,
@@ -177,10 +176,11 @@ export const PermissionRepository = () => {
 			});
 
 			if (existingPermissions.length > 0) {
+				type ExistingPermission = { name: string };
 				throw new UnprocessableEntityError("Some permission already exists", [
 					{
 						name: [
-							`Permission names ${existingPermissions.map((perm) => perm.name).join(", ")} already exist`,
+							`Permission names ${existingPermissions.map((perm: ExistingPermission) => perm.name).join(", ")} already exist`,
 						],
 					},
 				]);
@@ -258,9 +258,10 @@ export const PermissionRepository = () => {
 			const dataPermissions = await database.query.permissions.findMany({
 				columns: { id: true, name: true, group: true },
 			});
+			type PermissionSelectData = { id: string; name: string; group: string };
 			const grouped: Record<string, PermissionSelectOptions["permissions"]> =
 				{};
-			dataPermissions.forEach((perm) => {
+			dataPermissions.forEach((perm: PermissionSelectData) => {
 				if (!grouped[perm.group]) grouped[perm.group] = [];
 				grouped[perm.group].push(perm);
 			});

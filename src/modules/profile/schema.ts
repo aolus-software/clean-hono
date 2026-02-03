@@ -4,7 +4,7 @@ import {
 	NameSchema,
 	OptionalRemarksSchema,
 	PasswordSchema,
-} from "@packages/schemas";
+} from "@hono-libs";
 
 export const UpdateProfileSchema = z.object({
 	name: NameSchema,

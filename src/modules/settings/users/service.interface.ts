@@ -1,9 +1,9 @@
 import type {
 	DatatableType,
 	PaginationResponse,
-	UserInformation,
-} from "@packages/*";
-import type { UserDetail, UserList } from "@postgres/repositories";
+	UserDetail,
+	UserList,
+} from "@types";
 import type { z } from "@hono/zod-openapi";
 import { UserCreateSchema, UserUpdateSchema } from "./schema";
 

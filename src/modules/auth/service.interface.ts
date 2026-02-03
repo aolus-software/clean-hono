@@ -1,4 +1,4 @@
-import type { UserInformation } from "@packages/*";
+import type { UserInformation } from "@types";
 
 export interface IAuthService {
 	login(

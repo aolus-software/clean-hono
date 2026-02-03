@@ -1,10 +1,10 @@
-import { container } from "@packages/core";
 import { AuthService } from "./modules/auth/service";
 import { UserService } from "./modules/settings/users/services";
 import { RoleService } from "./modules/settings/roles/services";
 import { PermissionService } from "./modules/settings/permissions/services";
 import { ProfileService } from "./modules/profile/service";
 import { SelectOptionsService } from "./modules/settings/select-options/services";
+import { container } from "@hono-libs";
 
 /**
  * Bootstrap the application by registering all services in the DI container

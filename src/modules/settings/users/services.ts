@@ -1,13 +1,14 @@
-import { DatatableType, PaginationResponse } from "@packages/*";
 import {
-	UserRepository,
+	DatatableType,
+	PaginationResponse,
 	UserList,
 	UserDetail,
 	UserCreate,
-} from "@postgres/repositories";
+} from "@types";
+import { UserRepository } from "@database";
 import { z } from "@hono/zod-openapi";
 import { UserCreateSchema, UserUpdateSchema } from "./schema";
-import type { IUserService } from "../../../interfaces/user.interface";
+import { IUserService } from "./service.interface";
 
 export class UserService implements IUserService {
 	async findAll(

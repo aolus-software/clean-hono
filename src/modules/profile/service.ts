@@ -1,12 +1,12 @@
-import { Hash, UserInformation } from "@packages/*";
 import { UpdatePasswordSchema, UpdateProfileSchema } from "./schema";
 import { z } from "@hono/zod-openapi";
-import { db, usersTable } from "@postgres/index";
+import { db, usersTable, UserRepository } from "@database";
 import { and, eq, isNull } from "drizzle-orm";
-import { UserRepository } from "@postgres/repositories";
-import { UnauthorizedError, UnprocessableEntityError } from "packages/errors";
-import { Cache, UserInformationCacheKey } from "@cache/*";
+import { UnauthorizedError, UnprocessableEntityError } from "@errors";
+import { Cache, UserInformationCacheKey } from "@cache";
 import type { IProfileService } from "./service.interface";
+import { UserInformation } from "@types";
+import { Hash } from "@utils";
 
 export class ProfileService implements IProfileService {
 	async updateUserProfile(

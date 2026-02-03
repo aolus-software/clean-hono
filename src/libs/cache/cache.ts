@@ -1,6 +1,6 @@
 import Redis from "ioredis";
-import { logger } from "@packages/logger";
-import { RedisClient } from "infra/redis/redis-client";
+import { logger } from "@utils";
+import { RedisClient } from "@database";
 
 class Cache {
 	private static redis: Redis | null = null;

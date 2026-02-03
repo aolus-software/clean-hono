@@ -1,18 +1,13 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import {
-	AuthMiddleware,
-	GuardDescriptions,
-	ZodDatatableSchema,
-} from "@packages/*";
-import { ResponseToolkit } from "@toolkit/response";
-import { commonResponse } from "@toolkit/schemas";
+import { commonResponse, ResponseToolkit } from "@utils";
 import {
 	PermissionCreateSchema,
 	PermissionDetailResponseSchema,
 	PermissionListResponseSchema,
 	PermissionUpdateSchema,
 } from "./schema";
-import { Env } from "@app/api/types/app.types";
+import { Env, ZodDatatableSchema } from "@types";
+import { AuthMiddleware, GuardDescriptions } from "@hono-libs";
 
 const PermissionRoutes = new OpenAPIHono<Env>();
 

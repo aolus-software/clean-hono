@@ -28,3 +28,7 @@ export const email_verificationsRelations = relations(
 		}),
 	}),
 );
+
+export type EmailVerification = typeof email_verificationsTable.$inferSelect;
+export type InsertEmailVerification =
+	typeof email_verificationsTable.$inferInsert;

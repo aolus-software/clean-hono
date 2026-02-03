@@ -1,5 +1,5 @@
 import { z } from "@hono/zod-openapi";
-import { ZodPaginationResponseSchema } from "@packages/*";
+import { ZodPaginationResponseSchema } from "@types";
 
 // Helper to wrap response in success structure
 const successResponse = <T extends z.ZodTypeAny>(dataSchema: T) =>

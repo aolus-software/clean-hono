@@ -1,4 +1,4 @@
-import { PermissionSelectOptions } from "@postgres/repositories";
+import { PermissionSelectOptions } from "@types";
 
 export interface ISelectOptionsService {
 	getPermissionOptions(): Promise<PermissionSelectOptions[]>;

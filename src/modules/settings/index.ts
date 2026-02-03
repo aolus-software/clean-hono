@@ -1,5 +1,5 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
-import { defaultHook } from "packages/errors";
+import { defaultHook } from "@errors";
 import PermissionRoutes from "./permissions/routes";
 import RoleRoutes from "./roles/routes";
 import UserRoutes from "./users/routes";

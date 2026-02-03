@@ -1,5 +1,10 @@
-import { DatatableType, PaginationResponse } from "@packages/*";
-import { RoleRepository, RoleList, RoleDetail } from "@postgres/repositories";
+import {
+	DatatableType,
+	PaginationResponse,
+	RoleList,
+	RoleDetail,
+} from "@types";
+import { RoleRepository } from "@database";
 import { z } from "@hono/zod-openapi";
 import { RoleCreateSchema, RoleUpdateSchema } from "./schema";
 import { IRoleService } from "./service.interface";

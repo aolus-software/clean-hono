@@ -1,10 +1,10 @@
-import * as z from "zod";
 import {
 	EmailSchema,
 	PasswordSchema,
 	StrongPasswordSchema,
 	TokenSchema,
-} from "@packages/schemas";
+} from "@hono-libs";
+import * as z from "zod";
 
 export const LoginSchema = z.object({
 	email: EmailSchema,

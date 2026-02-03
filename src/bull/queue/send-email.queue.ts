@@ -1,5 +1,5 @@
 import { Queue } from "bullmq";
-import { RedisClient } from "infra/redis/redis-client";
+import { RedisClient } from "@database";
 
 const queueRedis = RedisClient.getQueueRedisClient();
 

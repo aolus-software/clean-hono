@@ -1,19 +1,13 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import {
-	AuthMiddleware,
-	GuardDescriptions,
-	Guards,
-	ZodDatatableSchema,
-} from "@packages/*";
-import { ResponseToolkit } from "@toolkit/response";
-import { commonResponse } from "@toolkit/schemas";
-import {
 	RoleCreateSchema,
 	RoleDetailResponseSchema,
 	RoleListResponseSchema,
 	RoleUpdateSchema,
 } from "./schema";
-import { Env } from "@app/api/types/app.types";
+import { Env, ZodDatatableSchema } from "@types";
+import { AuthMiddleware, GuardDescriptions, Guards } from "@hono-libs";
+import { commonResponse, ResponseToolkit } from "@utils";
 
 const RoleRoutes = new OpenAPIHono<Env>();
 

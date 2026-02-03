@@ -5,28 +5,7 @@ import { DatatableToolkit } from "@utils";
 import { DbTransaction } from ".";
 import { DatatableType, PaginationResponse, SortDirection } from "@types";
 import { NotFoundError, UnprocessableEntityError } from "@errors";
-
-export type RoleList = {
-	id: string;
-	name: string;
-	createdAt: Date;
-	updatedAt: Date;
-};
-
-export type RoleDetail = {
-	id: string;
-	name: string;
-	createdAt: Date;
-	updatedAt: Date;
-	permissions: {
-		group: string;
-		names: {
-			id: string;
-			name: string;
-			is_assigned: boolean;
-		}[];
-	}[];
-};
+import { RoleList } from "@types";
 
 export const RoleRepository = () => {
 	const dbInstance = db;

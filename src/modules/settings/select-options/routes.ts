@@ -1,12 +1,12 @@
 import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
-import { ResponseToolkit } from "@toolkit/response";
-import { commonResponse } from "@toolkit/schemas";
+import { ResponseToolkit, commonResponse } from "@utils";
+
 import {
 	PermissionSelectOptionsResponseSchema,
 	RoleSelectOptionsResponseSchema,
 } from "./schema";
-import { AuthMiddleware } from "@packages/*";
-import { Env } from "@app/api/types/app.types";
+import { AuthMiddleware } from "@hono-libs";
+import { Env } from "@types";
 
 const SelectOptionsRoutes = new OpenAPIHono<Env>();
 
