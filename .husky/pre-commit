@@ -1,6 +1,5 @@
-make install
-make format
-make lint
-make db-generate
-make db-migrate
-make build-all
+bun install
+bun lint-staged
+bunx drizzle-kit generate
+bunx drizzle-kit migrate
+bun run build:all

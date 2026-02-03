@@ -1,387 +1,255 @@
 # Clean Hono
 
-A production-ready starter template for building scalable web applications with [Hono](https://hono.dev/) and [Bun](https://bun.sh/). Built with clean architecture principles, TypeScript, and modern development practices.
+A clean architecture backend API built with Hono, TypeScript, and Bun.
 
 ## Features
 
-### Core Stack
-
-- Hono framework with Bun runtime
-- TypeScript with strict type checking
-- Modular monorepo structure
-- Clean architecture with separation of concerns
-
-### Database & Storage
-
+- Clean architecture pattern with separation of concerns
+- Hono web framework with Zod OpenAPI integration
 - PostgreSQL with Drizzle ORM
-- ClickHouse for analytics and time-series data
-- Redis for caching and session management
-- Type-safe database operations and migrations
-- Database seeding support
+- Redis for caching and rate limiting
+- BullMQ for background job processing
+- ClickHouse for analytics (optional)
+- Comprehensive authentication and authorization (RBAC)
+- API documentation with Scalar
+- Docker support
 
-### API Features
+## Tech Stack
 
-- OpenAPI/Swagger documentation with Scalar UI
-- Zod schema validation
-- JWT authentication
-- RBAC (Role-Based Access Control) with guards
-- CORS configuration
-- Rate limiting
-- Request/response logging with Pino
-- Performance monitoring middleware
-- Request ID tracking
-- Body size limits
-- Secure headers
-
-### Background Processing
-
-- BullMQ for job queues
-- Worker processes for background tasks
-- Email queue system
-
-### Security
-
-- Bcrypt password hashing
-- Crypto-JS encryption/decryption
-- Authentication middleware
-- Permission and role guards
-- Secure headers with Helmet
-
-### Development
-
-- Hot reload with Bun watch mode
-- Docker and Docker Compose support
-- ESLint and Prettier configuration
-- Husky for Git hooks
-- Makefile for common tasks
-- Concurrent development workflows
+- **Runtime**: Bun
+- **Framework**: Hono
+- **Language**: TypeScript
+- **Databases**: PostgreSQL, Redis, ClickHouse
+- **ORM**: Drizzle
+- **Queue**: BullMQ
+- **Validation**: Zod
+- **API Docs**: Zod OpenAPI + Scalar
 
 ## Prerequisites
 
-- Bun (latest version)
-- PostgreSQL (v14 or higher)
-- ClickHouse
-- Redis (v6 or higher)
+- Bun 1.x or higher
+- PostgreSQL
+- Redis
 - Docker (optional)
-- Make (optional)
 
 ## Installation
 
-1. Clone the repository
+Install dependencies:
 
-```bash
-git clone https://github.com/aolus-software/clean-hono.git
-cd clean-hono
-```
-
-2. Install dependencies
-
-```bash
+```sh
 bun install
 ```
 
-3. Configure environment variables
+## Configuration
 
-```bash
+Copy the example environment file and configure your environment variables:
+
+```sh
 cp .env.example .env
-# Edit .env with your configuration
 ```
 
-4. Set up databases
+Configure the following environment variables:
 
-```bash
-make db-migrate      # Run PostgreSQL migrations
-make db-seed         # Seed database
-make migrate-clickhouse  # Run ClickHouse migrations
+- Database connections (PostgreSQL, Redis, ClickHouse)
+- Mail settings
+- JWT secrets
+- Application settings
+
+## Database Setup
+
+Generate and run PostgreSQL migrations:
+
+```sh
+bun run db:generate
+bun run db:migrate
 ```
 
-5. Start development server
+Seed the database with initial data:
 
-```bash
-make dev-all         # Start API and worker
+```sh
+bun run db:seed
 ```
 
-## Quick Start
+For development, you can also use:
 
-### Using Bun Scripts
-
-```bash
-# API Server
-bun run dev:api      # Development
-bun run build:api    # Build
-bun run start:api    # Production
-
-# Worker
-bun run dev:worker   # Development
-bun run build:worker # Build
-bun run start:worker # Production
-
-# Run both
-bun run dev:all      # Development mode
-bun run build:all    # Build all
-bun run start:all    # Production mode
+```sh
+bun run db:push  # Push schema directly without migrations
 ```
 
-### Using Make
+Open Drizzle Studio to view and edit data:
 
-```bash
-# View all commands
-make help
-
-# Development
-make dev-api         # Start API with hot reload
-make dev-worker      # Start worker with hot reload
-make dev-all         # Run both concurrently
-
-# Production
-make start-api       # Start API server
-make start-worker    # Start worker service
-make start-all       # Run both concurrently
-
-# Database
-make db-generate     # Generate migration files
-make db-migrate      # Run pending migrations
-make db-push         # Push schema to database (dev)
-make db-studio       # Open Drizzle Studio
-make db-seed         # Seed database
-
-# ClickHouse
-make migrate-clickhouse        # Run migrations
-make migrate-clickhouse-status # Check migration status
-
-# Code Quality
-make lint            # Run ESLint
-make format          # Format with Prettier
+```sh
+bun run db:studio
 ```
 
-### Using Docker
+Run ClickHouse migrations:
 
-```bash
-docker-compose up --build    # Build and run
-docker-compose up -d         # Run in background
-docker-compose down          # Stop services
+```sh
+bun run db:clickhouse:migrate
+```
+
+Check ClickHouse migration status:
+
+```sh
+bun run db:clickhouse:status
+```
+
+## Development
+
+Run the API server in development mode:
+
+```sh
+bun run dev:server
+```
+
+Run the worker in development mode:
+
+```sh
+bun run dev:worker
+```
+
+Run both server and worker concurrently:
+
+```sh
+bun run dev:all
+```
+
+The API will be available at http://localhost:3000
+
+## Production
+
+Build the application:
+
+```sh
+bun run build:all
+```
+
+Start the production server:
+
+```sh
+bun run start:all
+```
+
+## Docker
+
+Build and run with Docker Compose:
+
+```sh
+docker-compose up -d
 ```
 
 ## Project Structure
 
 ```
-clean-hono/
-├── apps/                    # Applications
-│   ├── api/                # Main API application
-│   │   ├── app.ts         # Hono app configuration
-│   │   ├── bootstrap.ts   # Service initialization
-│   │   ├── serve.ts       # Server entry point
-│   │   ├── modules/       # Feature modules
-│   │   │   ├── auth/      # Authentication
-│   │   │   ├── home/      # Home routes
-│   │   │   ├── profile/   # User profiles
-│   │   │   └── settings/  # Settings
-│   │   └── types/         # Type definitions
-│   └── worker/            # Background workers
-│       ├── queue/         # Queue handlers
-│       └── worker/        # Worker implementations
-├── config/                # Application configuration
-│   ├── app.config.ts      # App settings
-│   ├── cors.config.ts     # CORS settings
-│   ├── database.config.ts # Database config
-│   ├── mail.config.ts     # Email config
-│   ├── redis.config.ts    # Redis config
-│   └── env.ts             # Environment validation
-├── infra/                 # Infrastructure
-│   ├── clickhouse/        # ClickHouse setup
-│   │   ├── client/        # Client configuration
-│   │   ├── migrations/    # Migrations
-│   │   ├── repositories/  # Data access
-│   │   └── services/      # Business logic
-│   ├── postgres/          # PostgreSQL setup
-│   │   ├── migrations/    # Migrations
-│   │   ├── repositories/  # Data access
-│   │   └── schema/        # Drizzle schemas
-│   ├── redis/             # Redis client
-│   └── seed/              # Database seeding
-├── packages/              # Shared packages
-│   ├── cache/            # Caching utilities
-│   ├── core/             # Core functionality
-│   ├── default/          # Default values
-│   ├── errors/           # Error handling
-│   ├── guards/           # Auth guards
-│   ├── logger/           # Logging
-│   ├── mail/             # Email service
-│   ├── middlewares/      # Middleware functions
-│   ├── schemas/          # Validation schemas
-│   ├── security/         # Security utilities
-│   ├── toolkit/          # Helper functions
-│   └── types/            # Shared types
-├── storage/              # Storage directory
-│   └── logs/            # Application logs
-├── docs/                 # Documentation
-│   ├── guards/          # Guard documentation
-│   └── validation/      # Validation docs
-└── todos/                # Project todos
+src/
+├── app.ts                 # Application setup
+├── bootstrap.ts           # Bootstrap configuration
+├── index.ts              # Entry point
+├── bull/                 # Background jobs
+│   ├── queue/           # Job queues
+│   └── worker/          # Job workers
+├── libs/                 # Shared libraries
+│   ├── cache/           # Cache utilities
+│   ├── config/          # Configuration
+│   ├── database/        # Database clients and repositories
+│   ├── hono/            # Hono framework utilities
+│   ├── mail/            # Email service
+│   ├── types/           # TypeScript types
+│   └── utils/           # Utility functions
+└── modules/              # Feature modules
+    ├── auth/            # Authentication
+    ├── profile/         # User profile
+    └── settings/        # Application settings
 ```
 
-## Environment Configuration
+## Code Quality
 
-Required environment variables (see `.env.example`):
+Run linting:
 
-### Application
-
-```env
-APP_NAME=Hono App
-APP_PORT=3000
-APP_URL=http://localhost:3000
-APP_ENV=development
-APP_TIMEZONE=UTC
-APP_SECRET=your-app-secret
-APP_JWT_SECRET=your-jwt-secret
-APP_JWT_EXPIRES_IN=3600
+```sh
+bun run lint
 ```
 
-### Database
+Fix linting issues:
 
-```env
-DATABASE_URL=postgresql://user:password@localhost:5432/database
+```sh
+bun run lint:fix
 ```
 
-### ClickHouse
+Format code:
 
-```env
-CLICKHOUSE_HOST=http://localhost:8123
-CLICKHOUSE_USER=default
-CLICKHOUSE_PASSWORD=
-CLICKHOUSE_DATABASE=analytics
-```
-
-### Redis
-
-```env
-REDIS_HOST=localhost
-REDIS_PORT=6379
-REDIS_PASSWORD=
-REDIS_DB=0
-```
-
-### Email
-
-```env
-MAIL_HOST=smtp.mailtrap.io
-MAIL_PORT=2525
-MAIL_USER=your-user
-MAIL_PASSWORD=your-password
-MAIL_FROM=noreply@example.com
+```sh
+bun run format
 ```
 
 ## API Documentation
 
-Once the server is running, access the interactive API documentation:
+Once the server is running, access the API documentation at:
 
-- Swagger UI: `http://localhost:3000/docs`
-- OpenAPI JSON: `http://localhost:3000/openapi.json`
-
-## Module Structure
-
-Each module in `apps/api/modules/` follows a consistent pattern:
-
-- Routes definition and registration
-- Request/response schemas with Zod
-- OpenAPI documentation
-- Middleware and guards integration
-
-Example modules:
-
-- `auth/` - Authentication endpoints (login, register, logout)
-- `home/` - Public endpoints
-- `profile/` - User profile management
-- `settings/` - Application settings
-
-## Guards and Permissions
-
-The template includes a robust guard system:
-
-### Role Guard
-
-```typescript
-import { roleGuard } from "@packages/guards";
-
-// Require admin role
-app.get("/admin", roleGuard("admin"), (c) => {
-	// Handler
-});
+```
+http://localhost:3000/docs
 ```
 
-### Permission Guard
+## Scripts
 
-```typescript
-import { permissionGuard } from "@packages/guards";
+### Development
 
-// Require specific permission
-app.post("/posts", permissionGuard("posts.create"), (c) => {
-	// Handler
-});
-```
+- `bun run dev:server` - Run API server with hot reload
+- `bun run dev:worker` - Run worker with hot reload
+- `bun run dev:all` - Run both server and worker concurrently
 
-## Error Handling
+### Build
 
-Centralized error handling with custom error classes:
+- `bun run build:server` - Build API server
+- `bun run build:worker` - Build worker
+- `bun run build:all` - Build both server and worker concurrently
 
-- `ForbiddenError` - 403 Forbidden
-- `NotFoundError` - 404 Not Found
-- `UnauthorizedError` - 401 Unauthorized
-- `UnprocessableEntityError` - 422 Validation Error
+### Production
 
-Example:
+- `bun run start:server` - Start API server in production
+- `bun run start:worker` - Start worker in production
+- `bun run start:all` - Start both in production concurrently
 
-```typescript
-import { NotFoundError } from "@packages/errors";
+### Code Quality
 
-throw new NotFoundError("User not found");
-```
+- `bun run lint` - Run ESLint
+- `bun run lint:fix` - Fix ESLint issues
+- `bun run format` - Format code with Prettier
 
-## Background Jobs
+### Database (PostgreSQL/Drizzle)
 
-Create workers in `apps/worker/queue/`:
+- `bun run db:generate` - Generate migration files from schema
+- `bun run db:migrate` - Apply pending migrations
+- `bun run db:push` - Push schema to database (development only)
+- `bun run db:pull` - Pull schema from database
+- `bun run db:studio` - Open Drizzle Studio
+- `bun run db:drop` - Drop all tables (dangerous!)
+- `bun run db:seed` - Seed database with initial data
 
-```typescript
-export const sendEmailQueue = async (job: Job) => {
-	const { to, subject, html } = job.data;
-	// Send email logic
-};
-```
+### Database (ClickHouse)
+
+- `bun run db:clickhouse:migrate` - Run ClickHouse migrations
+- `bun run db:clickhouse:status` - Check migration status
+
+### Makefile Commands
+
+You can also use `make` commands:
+
+- `make help` - Show all available commands
+- `make dev-all` - Start development environment
+- `make fresh` - Drop, push schema, and seed (development)
+- `make reset` - Generate migrations, migrate, and seed
 
 ## Contributing
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/name`)
-3. Commit your changes (`git commit -m 'Add feature'`)
-4. Push to the branch (`git push origin feature/name`)
-5. Open a Pull Request
+2. Create your feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
+
+Please read our Contributing Guidelines and Code of Conduct.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Support
-
-For issues and questions:
-
-- Open an issue on GitHub
-- Check the documentation in the `docs/` directory
-
-<!-- _Clean Architecture: Separation between API layer, Application services, and Infrastructure components_ -->
-
-## Acknowledgments
-
-- [Hono](https://hono.dev/) - The web framework
-- [Bun](https://bun.sh/) - JavaScript runtime and package manager
-- [Drizzle ORM](https://orm.drizzle.team/) - Type-safe database toolkit
-
-## Support
-
-If you have any questions or issues, please:
-
-- Open an [issue](https://github.com/aolus-software/clean-hono/issues)
-- Start a [discussion](https://github.com/aolus-software/clean-hono/discussions)
-
----
-
-Made by [Aolus Software](https://github.com/aolus-software)
+This project is licensed under the MIT License.
