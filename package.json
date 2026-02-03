@@ -1,25 +1,29 @@
 {
 	"name": "clean-hono",
 	"scripts": {
-		"start:server": "bun run ./src/index.ts",
 		"dev:server": "bun run --hot --watch ./src/index.ts",
-		"build:server": "bun build ./src/index.ts --outdir=dist --target=node",
-		"start:worker": "bun run ./src/bull/index.ts",
 		"dev:worker": "bun run --hot --watch ./src/bull/index.ts",
+		"dev:all": "concurrently --names \"server,worker\" --prefix-colors \"blue,magenta\" \"bun run dev:server\" \"bun run dev:worker\"",
+		"build:server": "bun build ./src/index.ts --outdir=dist --target=node",
 		"build:worker": "bun build ./src/bull/index.ts --outdir=dist --target=node",
-		"start:api": "bun run ./src/index.ts",
-		"dev:api": "bun run --hot --watch ./src/index.ts",
-		"build:api": "bun build ./src/index.ts --outdir=dist --target=node",
+		"build:all": "concurrently --names \"server,worker\" --prefix-colors \"blue,magenta\" \"bun run build:server\" \"bun run build:worker\"",
+		"start:server": "bun run ./src/index.ts",
+		"start:worker": "bun run ./src/bull/index.ts",
+		"start:all": "concurrently --names \"server,worker\" --prefix-colors \"blue,magenta\" \"bun run start:server\" \"bun run start:worker\"",
 		"lint": "bun run eslint . --ext .ts,.js",
 		"lint:fix": "bun run eslint . --ext .ts,.js --fix",
 		"format": "bun run prettier --write .",
 		"prepare": "husky install",
-		"dev:all": "concurrently --names \"server,worker\" --prefix-colors \"blue,magenta\" \"bun run dev:server\" \"bun run dev:worker\"",
-		"build:all": "concurrently --names \"server,worker\" --prefix-colors \"blue,magenta\" \"bun run build:server\" \"bun run build:worker\"",
-		"start:all": "concurrently --names \"server,worker\" --prefix-colors \"blue,magenta\" \"bun run start:server\" \"bun run start:worker\"",
-		"db:postgres:seed": "bun run ./infra/seed/index.ts",
-		"migrate:clickhouse": "bun run infra/clickhouse/scripts/migrate.ts migrate",
-		"migrate:clickhouse:status": "bun run infra/clickhouse/scripts/migrate.ts status"
+		"db:generate": "drizzle-kit generate",
+		"db:migrate": "drizzle-kit migrate",
+		"db:push": "drizzle-kit push",
+		"db:pull": "drizzle-kit introspect",
+		"db:studio": "drizzle-kit studio",
+		"db:drop": "drizzle-kit drop",
+		"db:seed": "bun run src/libs/database/seed/index.ts",
+		"db:clickhouse:migrate": "bun run src/libs/database/clickhouse/scripts/migrate.ts migrate",
+		"db:clickhouse:status": "bun run src/libs/database/clickhouse/scripts/migrate.ts status",
+		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
 		"@clickhouse/client": "^1.16.0",
@@ -56,8 +60,15 @@
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-prettier": "^5.5.5",
 		"husky": "^9.1.7",
+		"lint-staged": "^16.2.7",
 		"prettier": "^3.8.1",
 		"tsx": "^4.21.0",
 		"typescript-eslint": "^8.54.0"
+	},
+	"lint-staged": {
+		"*.ts": [
+			"bun run lint:fix",
+			"bun run format"
+		]
 	}
 }
