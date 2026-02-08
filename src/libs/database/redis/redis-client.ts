@@ -11,7 +11,6 @@ export class RedisClient {
 				host: RedisConfig.REDIS_HOST,
 				port: RedisConfig.REDIS_PORT,
 				password: RedisConfig.REDIS_PASSWORD || undefined,
-				db: RedisConfig.REDIS_DB,
 			});
 		}
 
@@ -25,7 +24,6 @@ export class RedisClient {
 				port: RedisConfig.REDIS_PORT,
 				password: RedisConfig.REDIS_PASSWORD || undefined,
 				maxRetriesPerRequest: null,
-				db: RedisConfig.REDIS_DB,
 			});
 		}
 

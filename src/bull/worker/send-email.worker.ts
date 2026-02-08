@@ -1,7 +1,7 @@
 import { Worker } from "bullmq";
 import { RedisClient } from "@database";
 import { logger } from "@utils";
-import { EmailOptions, EmailService } from "@libs/mail/mail.service";
+import { EmailOptions, EmailService } from "@mail/mail.service";
 
 const queueRedis = RedisClient.getQueueRedisClient();
 
