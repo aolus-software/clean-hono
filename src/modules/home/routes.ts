@@ -1,10 +1,6 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
-import {
-	ResponseToolkit,
-	commonResponse,
-	createErrorResponse,
-	DateToolkit,
-} from "@utils";
+import { commonResponse, createErrorResponse } from "@hono-libs/schemas";
+import { ResponseToolkit, DateToolkit } from "@utils";
 import { AppConfig } from "@config";
 import { createRoute } from "@hono/zod-openapi";
 import { z } from "zod";

@@ -1,5 +1,6 @@
 import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
-import { ResponseToolkit, commonResponse } from "@utils";
+import { commonResponse } from "@hono-libs/schemas";
+import { ResponseToolkit } from "@utils";
 
 import {
 	PermissionSelectOptionsResponseSchema,
