@@ -4,7 +4,7 @@
  */
 
 import type { MiddlewareHandler } from "hono";
-import type { Env, AppType } from "./elysia/app.types";
+import type { Env, AppType } from "./hono/app.types";
 
 /**
  * Plugin lifecycle hooks

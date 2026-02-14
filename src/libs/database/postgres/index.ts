@@ -3,7 +3,7 @@ import { Pool } from "pg";
 import { DatabaseConfig } from "@config";
 import { schema } from "./schema";
 
-const connectionString = DatabaseConfig.url;
+const connectionString = DatabaseConfig.DATABASE_URL;
 const client = new Pool({ connectionString });
 
 const db = drizzle(client, { schema });
