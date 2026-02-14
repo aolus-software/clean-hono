@@ -61,7 +61,10 @@ export default tseslint.config(
 			semi: ["error", "always"],
 
 			"no-unused-expressions": "error",
-			"no-unused-vars": "error",
+			"no-unused-vars": [
+				"error",
+				{ argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+			],
 			"no-console": "warn",
 			"no-undef": "off",
 			"no-redeclare": "warn",

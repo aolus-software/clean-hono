@@ -6,6 +6,7 @@ import { AppError } from "./base.error";
 import { Env } from "@types";
 import { DateToolkit, logger } from "@utils";
 import { AppConfig } from "@config";
+import { ERROR_CODES } from "./error-codes.constant";
 
 /**
  * Standard error response format
@@ -27,7 +28,7 @@ export const registerException = (app: Hono<Env>) => {
 			{
 				success: false,
 				message: "Route not found",
-				code: "NOT_FOUND",
+				code: ERROR_CODES.ROUTE_NOT_FOUND,
 				errors: [],
 				data: null,
 				requestId,
@@ -44,7 +45,7 @@ export const registerException = (app: Hono<Env>) => {
 				{
 					success: false,
 					message: err.message,
-					code: "VALIDATION_ERROR",
+					code: ERROR_CODES.VALIDATION_ERROR,
 					errors: err.cause || [],
 					data: null,
 					requestId,
@@ -60,7 +61,7 @@ export const registerException = (app: Hono<Env>) => {
 				{
 					success: false,
 					message: "Validation failed",
-					code: "VALIDATION_ERROR",
+					code: ERROR_CODES.VALIDATION_ERROR,
 					errors: formatZodError(err),
 					data: null,
 					requestId,
@@ -107,7 +108,7 @@ export const registerException = (app: Hono<Env>) => {
 					{
 						success: false,
 						message: "Route not found",
-						code: "NOT_FOUND",
+						code: ERROR_CODES.ROUTE_NOT_FOUND,
 						errors: [],
 						data: null,
 						requestId,
@@ -119,7 +120,7 @@ export const registerException = (app: Hono<Env>) => {
 				{
 					success: false,
 					message: err.message,
-					code: "HTTP_ERROR",
+					code: ERROR_CODES.HTTP_ERROR,
 					errors: [],
 					data: null,
 					requestId,
@@ -146,7 +147,7 @@ export const registerException = (app: Hono<Env>) => {
 			{
 				success: false,
 				message: "Internal server error",
-				code: "INTERNAL_ERROR",
+				code: ERROR_CODES.INTERNAL_ERROR,
 				errors: [],
 				data: null,
 				requestId,

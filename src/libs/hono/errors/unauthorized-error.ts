@@ -1,8 +1,9 @@
 import { AppError } from "./base.error";
+import { ERROR_CODES, HTTP_STATUS } from "./error-codes.constant";
 
 export class UnauthorizedError extends AppError {
-	statusCode = 401;
-	errorCode = "UNAUTHORIZED";
+	statusCode = HTTP_STATUS.UNAUTHORIZED;
+	errorCode = ERROR_CODES.UNAUTHORIZED;
 
 	/**
 	 * Represents an error when a user is not authenticated or has invalid credentials.

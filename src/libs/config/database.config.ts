@@ -1,9 +1,18 @@
 import { env } from "./env";
-
-interface IDatabaseConfig {
-	url: string;
-}
+import type { DatabaseConfig as IDatabaseConfig } from "@types";
+import {
+	validateDatabaseConfig,
+	validateConfigWithLogging,
+} from "./config.validator";
+import { AppConfig } from "./app.config";
 
 export const DatabaseConfig: IDatabaseConfig = {
-	url: env.DATABASE_URL,
+	DATABASE_URL: env.DATABASE_URL,
 };
+
+const validationResult = validateDatabaseConfig(DatabaseConfig);
+validateConfigWithLogging(
+	validationResult,
+	"Database",
+	AppConfig.APP_ENV === "production",
+);

@@ -245,6 +245,7 @@ You can also use `make` commands:
 See [TODO.md](./TODO.md) for a comprehensive list of planned improvements and enhancements.
 
 Key upcoming improvements:
+
 - Add comprehensive test suite
 - Enhance ESLint configuration
 - Reorganize utils structure

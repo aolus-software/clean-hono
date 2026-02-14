@@ -27,7 +27,7 @@ In-depth security documentation:
 
 - Authentication & authorization flows
 - Password security requirements
-- Token management Best practices
+- Token management best practices
 - Rate limiting
 - RBAC implementation
 - Security checklist
@@ -38,6 +38,80 @@ In-depth security documentation:
 - Understanding security mechanisms
 - Conducting security audits
 - Setting up production deployments
+
+### [Middleware Documentation](./MIDDLEWARE.md)
+
+Comprehensive middleware guide:
+
+- Core vs Security middleware organization
+- Available middleware and their functions
+- Middleware execution order
+- Creating custom middleware
+- Configuration and customization
+- Troubleshooting
+
+**Use this if you're:**
+
+- Understanding the middleware architecture
+- Creating custom middleware
+- Configuring security features
+- Debugging middleware issues
+
+### [Error Handling Documentation](./ERROR_HANDLING.md)
+
+Complete error handling reference:
+
+- Error response format
+- Error codes and their meanings
+- Available error classes
+- Creating custom errors
+- Error logging and debugging
+- Testing error handling
+- Best practices
+
+**Use this if you're:**
+
+- Understanding error responses
+- Handling errors in your client
+- Creating custom error types
+- Debugging application errors
+
+### [Configuration Documentation](./CONFIGURATION.md)
+
+Comprehensive configuration reference:
+
+- All environment variables explained
+- Type-safe configuration access
+- Runtime validation
+- Configuration best practices
+- Production deployment checklist
+- Troubleshooting config issues
+
+**Use this if you're:**
+
+- Setting up the application
+- Configuring for different environments
+- Understanding configuration options
+- Deploying to production
+
+### [Plugin System Documentation](./PLUGINS.md)
+
+Complete plugin architecture guide:
+
+- Creating custom plugins
+- Plugin lifecycle and hooks
+- Middleware and route registration
+- Plugin dependencies
+- Configuration options
+- Example plugins
+- Best practices
+
+**Use this if you're:**
+
+- Building modular features
+- Creating reusable components
+- Understanding the plugin architecture
+- Extending application functionality
 
 ## 🚀 Quick Start
 
