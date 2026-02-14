@@ -87,10 +87,7 @@ jobs:
         run: bun install
 
       - name: Build server
-        run: bun run build:server
-
-      - name: Build worker
-        run: bun run build:worker
+        run: bun run build
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
