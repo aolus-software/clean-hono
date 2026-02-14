@@ -1,6 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { AuthMiddleware, GuardDescriptions, Guards } from "@hono-libs";
-import { commonResponse, ResponseToolkit } from "@utils";
+import { commonResponse } from "@hono-libs/schemas";
+import { ResponseToolkit } from "@utils";
 import {
 	UserCreateSchema,
 	UserDetailResponseSchema,

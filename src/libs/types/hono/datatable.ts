@@ -1,5 +1,5 @@
-import { SortDirection } from "./sort-direction";
 import { z } from "@hono/zod-openapi";
+import { SortDirection } from "../common.types";
 
 export type DatatableType = {
 	page: number;

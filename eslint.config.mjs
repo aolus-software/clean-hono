@@ -1,6 +1,8 @@
 // @ts-check
 import eslint from "@eslint/js";
 import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended";
+import importPlugin from "eslint-plugin-import";
+import simpleImportSort from "eslint-plugin-simple-import-sort";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
@@ -18,6 +20,7 @@ export default tseslint.config(
 	eslint.configs.recommended,
 	...tseslint.configs.recommendedTypeChecked,
 	eslintPluginPrettierRecommended,
+
 	{
 		languageOptions: {
 			globals: {
@@ -31,6 +34,11 @@ export default tseslint.config(
 				projectService: true,
 				tsconfigRootDir: import.meta.dirname,
 			},
+		},
+
+		plugins: {
+			import: importPlugin,
+			"simple-import-sort": simpleImportSort,
 		},
 	},
 	{
@@ -53,7 +61,10 @@ export default tseslint.config(
 			semi: ["error", "always"],
 
 			"no-unused-expressions": "error",
-			"no-unused-vars": "error",
+			"no-unused-vars": [
+				"error",
+				{ argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+			],
 			"no-console": "warn",
 			"no-undef": "off",
 			"no-redeclare": "warn",

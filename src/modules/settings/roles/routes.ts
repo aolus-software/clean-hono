@@ -7,7 +7,8 @@ import {
 } from "./schema";
 import { Env, ZodDatatableSchema } from "@types";
 import { AuthMiddleware, GuardDescriptions, Guards } from "@hono-libs";
-import { commonResponse, ResponseToolkit } from "@utils";
+import { commonResponse } from "@hono-libs/schemas";
+import { ResponseToolkit } from "@utils";
 
 const RoleRoutes = new OpenAPIHono<Env>();
 

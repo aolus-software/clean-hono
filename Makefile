@@ -8,19 +8,13 @@ help:
 	@echo "    install             - Install dependencies"
 	@echo ""
 	@echo "  Development:"
-	@echo "    dev-server          - Start API server with hot reload"
-	@echo "    dev-worker          - Start worker with hot reload"
-	@echo "    dev-all             - Run server and worker concurrently"
+	@echo "    dev             	   - Run dev server concurrently"
 	@echo ""
 	@echo "  Build:"
-	@echo "    build-server        - Build the API server"
-	@echo "    build-worker        - Build the worker"
-	@echo "    build-all           - Build server and worker concurrently"
+	@echo "    build           	   - Build both server and worker"
 	@echo ""
 	@echo "  Production:"
-	@echo "    start-server        - Start API server in production"
-	@echo "    start-worker        - Start worker in production"
-	@echo "    start-all           - Run server and worker in production"
+	@echo "    start               - Start both server and worker in production"
 	@echo ""
 	@echo "  Code Quality:"
 	@echo "    lint                - Run ESLint"
@@ -47,35 +41,14 @@ help:
 install:
 	bun install
 
-# Development commands
-dev-server:
-	bun run dev:server
+dev:
+	bun run dev
 
-dev-worker:
-	bun run dev:worker
+build:
+	bun run build
 
-dev-all:
-	bun run dev:all
-
-# Build commands
-build-server:
-	bun run build:server
-
-build-worker:
-	bun run build:worker
-
-build-all:
-	bun run build:all
-
-# Production commands
-start-server:
-	bun run start:server
-
-start-worker:
-	bun run start:worker
-
-start-all:
-	bun run start:all
+start:
+	bun run start
 
 # Code quality
 lint:

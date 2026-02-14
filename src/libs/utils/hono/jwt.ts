@@ -13,17 +13,17 @@ export class JWTToolkit {
 	async sign(payload: object): Promise<string> {
 		return sign(
 			{
-				exp: this.expiresIn,
+				exp: Math.floor(Date.now() / 1000) + this.expiresIn,
 				...payload,
 			},
 			this.secret,
-			"ES256",
+			"HS256",
 		);
 	}
 
 	async verify<T = Record<string, unknown>>(token: string): Promise<T | null> {
 		try {
-			const payload = await verify(token, this.secret, "ES256");
+			const payload = await verify(token, this.secret, "HS256");
 			return payload as unknown as T;
 		} catch (error) {
 			throw new Error("Invalid token", { cause: error });

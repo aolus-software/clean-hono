@@ -1,8 +1,9 @@
 import { AppError } from "./base.error";
+import { ERROR_CODES, HTTP_STATUS } from "./error-codes.constant";
 
 export class NotFoundError extends AppError {
-	statusCode = 404;
-	errorCode = "NOT_FOUND";
+	statusCode = HTTP_STATUS.NOT_FOUND;
+	errorCode = ERROR_CODES.NOT_FOUND;
 
 	/**
 	 * Represents an error when a resource is not found.

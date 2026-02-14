@@ -103,24 +103,23 @@
 		"skipLibCheck": true /* Skip type checking all .d.ts files. */,
 
 		"paths": {
-			// "@": ["./src", "./src/*"],
-			"@libs": ["./src/libs", "./src/libs/*"],
-			"@libs/*": ["./src/libs", "./src/libs/*"],
-			"@modules": ["./src/modules", "./src/modules/*"],
-			"@cache": ["./src/libs/cache", "./src/libs/cache/*"],
-			"@config": ["./src/libs/config", "./src/libs/config/*"],
-			"@hono-libs": ["./src/libs/hono", "./src/libs/hono/*"],
-			"@hono-libs/*": ["./src/libs/hono", "./src/libs/hono/*"],
-			"@database": ["./src/libs/database", "./src/libs/database/*"],
-			"@database/*": ["./src/libs/database", "./src/libs/database/*"],
-			"@default": ["./src/libs/default", "./src/libs/default/*"],
-			"@errors": ["./src/libs/hono/errors", "./src/libs/hono/errors/*"],
-			"@guards": ["./src/libs/hono/guards", "./src/libs/hono/guards/*"],
-			"@utils": ["./src/libs/utils", "./src/libs/utils/*"],
-			"@types": ["./src/libs/types", "./src/libs/types/*"],
+			"@config": ["./src/libs/config"],
+			"@cache": ["./src/libs/cache"],
+			"@default": ["./src/libs/default"],
+			"@mail/*": ["./src/libs/mail/*"],
+			"@database": ["./src/libs/database"],
+			"@database/*": ["./src/libs/database/*"],
+			"@hono-libs": ["./src/libs/hono"],
+			"@hono-libs/*": ["./src/libs/hono/*"],
+			"@errors": ["./src/libs/hono/errors"],
+			"@guards": ["./src/libs/hono/guards"],
+			"@utils": ["./src/libs/utils"],
+			"@utils/*": ["./src/libs/utils/*"],
+			"@types": ["./src/libs/types"],
+			"@modules": ["./src/modules"],
 			"@modules/*": ["./src/modules/*"],
-			"@bull": ["./src/bull", "./src/bull/*"],
-			"@bull/*": ["./src/bull", "./src/bull/*"]
+			"@bull": ["./src/bull"],
+			"@bull/*": ["./src/bull/*"]
 		}
 	}
 }

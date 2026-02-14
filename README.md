@@ -240,6 +240,20 @@ You can also use `make` commands:
 - `make fresh` - Drop, push schema, and seed (development)
 - `make reset` - Generate migrations, migrate, and seed
 
+## Roadmap & Improvements
+
+See [TODO.md](./TODO.md) for a comprehensive list of planned improvements and enhancements.
+
+Key upcoming improvements:
+
+- Add comprehensive test suite
+- Enhance ESLint configuration
+- Reorganize utils structure
+- Add more middleware documentation
+- Improve OpenAPI schema examples
+
+Compare with clean-elysia implementation: [COMPARISON.md](../COMPARISON.md)
+
 ## Contributing
 
 1. Fork the repository
