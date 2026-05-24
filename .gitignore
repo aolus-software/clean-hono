@@ -47,3 +47,5 @@ package-lock.json
 /dist
 
 /storage/logs/*
+
+skills-lock.json

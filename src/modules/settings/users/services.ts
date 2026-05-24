@@ -3,7 +3,6 @@ import {
 	PaginationResponse,
 	UserList,
 	UserDetail,
-	UserCreate,
 } from "@types";
 import { UserRepository } from "@database";
 import { z } from "@hono/zod-openapi";
@@ -18,7 +17,7 @@ export class UserService implements IUserService {
 	}
 
 	async create(data: z.infer<typeof UserCreateSchema>): Promise<void> {
-		await UserRepository().create(data as UserCreate);
+		await UserRepository().create(data);
 	}
 
 	async findOne(id: string): Promise<UserDetail> {

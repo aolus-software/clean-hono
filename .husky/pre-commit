@@ -1,7 +1,7 @@
 bun install
 bun run format
 bun run lint:fix
-bunx drizzle-kit generate
-bunx drizzle-kit migrate
-bun run tsc --noEmit
+bunx --bun drizzle-kit generate
+bunx --bun drizzle-kit migrate
+bun run typecheck
 bun run build
