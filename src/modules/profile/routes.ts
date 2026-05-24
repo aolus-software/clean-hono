@@ -6,6 +6,7 @@ import { UpdatePasswordSchema, UpdateProfileSchema } from "./schema";
 import { ProfileService } from "./service";
 import { Env, ZodUserInformation } from "@types";
 import { AuthMiddleware } from "@hono-libs/middlewares/index";
+import { t } from "@i18n";
 
 const ProfileRoutes = new OpenAPIHono<Env>({ defaultHook });
 
@@ -42,12 +43,7 @@ const GetProfileRoute = createRoute({
 ProfileRoutes.openapi(GetProfileRoute, (c) => {
 	const user = c.get("currentUser");
 
-	return ResponseToolkit.success(
-		c,
-		user,
-		"User profile retrieved successfully",
-		200,
-	);
+	return ResponseToolkit.success(c, user, t("profile.retrieved"), 200);
 });
 
 // ============================================================
@@ -100,12 +96,7 @@ ProfileRoutes.openapi(UpdateProfileRoute, async (c) => {
 	const service = c.get("profileService");
 	const result = await service.updateUserProfile(user, updateData);
 
-	return ResponseToolkit.success(
-		c,
-		result,
-		"User profile updated successfully",
-		200,
-	);
+	return ResponseToolkit.success(c, result, t("profile.updated"), 200);
 });
 
 // ============================================================
@@ -173,8 +164,8 @@ ProfileRoutes.openapi(UpdatePasswordRoute, async (c) => {
 
 	return ResponseToolkit.success(
 		c,
-		{ message: "Password updated successfully" },
-		"User password updated successfully",
+		{ message: t("profile.passwordChanged") },
+		t("profile.passwordChanged"),
 		200,
 	);
 });

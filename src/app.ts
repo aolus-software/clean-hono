@@ -6,6 +6,7 @@ import {
 	requestIdMiddleware,
 	loggerMiddleware,
 	performanceMiddleware,
+	localeMiddleware,
 	diMiddleware,
 	corsMiddleware,
 	securityHeadersMiddleware,
@@ -28,6 +29,9 @@ app.use("*", loggerMiddleware);
 
 // Performance logging
 app.use("*", performanceMiddleware);
+
+// Locale detection from Accept-Language header
+app.use("*", localeMiddleware);
 
 // Dependency injection - bind services to context
 app.use("*", diMiddleware);

@@ -7,6 +7,7 @@ import { Cache, UserInformationCacheKey } from "@cache";
 import type { IProfileService } from "./service.interface";
 import { UserInformation } from "@types";
 import { Hash } from "@utils";
+import { t } from "@i18n";
 
 export class ProfileService implements IProfileService {
 	async updateUserProfile(
@@ -24,7 +25,7 @@ export class ProfileService implements IProfileService {
 
 		const updatedUser = await UserRepository().UserInformation(user.id);
 		if (!updatedUser) {
-			throw new UnauthorizedError("User not found after update");
+			throw new UnauthorizedError(t("profile.userNotFound"));
 		}
 
 		const cacheKey = UserInformationCacheKey(user.id);
@@ -43,18 +44,21 @@ export class ProfileService implements IProfileService {
 		});
 
 		if (!userData) {
-			throw new UnauthorizedError("User not found");
+			throw new UnauthorizedError(t("profile.userNotFound"));
 		}
 
 		if (
 			(await Hash.compareHash(data.current_password, userData.password)) ===
 			false
 		) {
-			throw new UnprocessableEntityError("Current password is incorrect", [
-				{
-					current_password: ["Current password is incorrect"],
-				},
-			]);
+			throw new UnprocessableEntityError(
+				t("profile.currentPasswordIncorrect"),
+				[
+					{
+						current_password: [t("profile.currentPasswordIncorrect")],
+					},
+				],
+			);
 		}
 
 		const newHashedPassword = await Hash.generateHash(data.new_password);

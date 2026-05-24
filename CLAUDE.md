@@ -16,6 +16,7 @@ Bun is the runtime for everything (dev server, scripts, seeds, ClickHouse migrat
 - `bun run db:generate` / `db:migrate` / `db:push` / `db:studio` / `db:drop` — Drizzle Kit against PostgreSQL. Schema and migrations live in `src/libs/database/postgres/` (see `drizzle.config.ts`).
 - `bun run db:seed` — seeds via `src/libs/database/seed/index.ts`.
 - `bun run db:clickhouse:migrate` / `db:clickhouse:status` — custom migrator at `src/libs/database/clickhouse/scripts/migrate.ts`.
+- `bun run i18n:keys` — regenerate `TranslationKey` type from `en.json`. Validates all locales have matching keys.
 - `make fresh` = `db:drop && db:push && db:seed` (dev only). `make reset` = `db:generate && db:migrate && db:seed`.
 
 There is **no test runner configured**; do not invent test commands.
@@ -34,7 +35,8 @@ Note: the root `README.md` references `dev:server`, `dev:worker`, `dev:all`, `bu
 
 1. `requestIdMiddleware` (must be first; everything downstream reads the ID)
 2. `loggerMiddleware`, `performanceMiddleware`
-3. `diMiddleware` — injects services from the DI container into `c.var`
+3. `localeMiddleware` — parses `Accept-Language` header and sets locale via `AsyncLocalStorage`
+4. `diMiddleware` — injects services from the DI container into `c.var`
 4. `bodyLimitMiddleware`, `corsMiddleware`, `securityHeadersMiddleware`, `rateLimiterMiddleware`
 5. `registerException(app)` — centralized error handler (see `src/libs/hono/errors/error.handler.ts`)
 6. `app.route("/", bootstrap)` mounts `src/modules/index.ts`, which wires `/`, `/auth`, `/profile`, `/settings`, plus `/docs` (Scalar) and `/docs/openapi.json`.
@@ -88,6 +90,17 @@ Routes apply `AuthMiddleware` first, then a `Guards.*` middleware before the han
 - Use `ResponseToolkit.success(c, data, message, status)` for success responses to keep the envelope consistent.
 - `defaultHook` from `@errors` is passed to every `new OpenAPIHono({ defaultHook })` so Zod validation failures route through the same formatter.
 
+### Internationalization (i18n)
+
+`src/libs/i18n/` provides locale-aware response messages. Supported locales: `en` (default), `id` (Indonesian).
+
+- `localeMiddleware` parses the `Accept-Language` header on every request and stores the locale in `AsyncLocalStorage` via `enterLocale()`. It also sets the `Content-Language` response header.
+- Call `t("translation.key")` from `@i18n` anywhere — services, routes, error handler, guards — it reads the current locale automatically.
+- Translation files are flat JSON in `src/libs/i18n/locales/{en,id}.json` using dot-notation keys (e.g. `"auth.loginSuccess"`).
+- `TranslationKey` is a generated union type in `locales/keys.generated.ts`. Regenerate with `bun run i18n:keys` after editing locale JSON files.
+- Variable interpolation: `t("key", { name: "John" })` resolves `{{name}}` in the template.
+- When adding a new translation: add the key to **both** `en.json` and `id.json`, then run `bun run i18n:keys`. The script validates both files have matching keys.
+
 ### Path aliases
 
 Defined in `tsconfig.json` and used pervasively — prefer them over relative paths:
@@ -95,7 +108,8 @@ Defined in `tsconfig.json` and used pervasively — prefer them over relative pa
 ```
 @config, @cache, @default, @mail/*, @database, @database/*,
 @hono-libs, @hono-libs/*, @errors, @guards,
-@utils, @utils/*, @types, @modules, @modules/*, @bull, @bull/*
+@utils, @utils/*, @types, @modules, @modules/*, @bull, @bull/*,
+@i18n
 ```
 
 ## Conventions

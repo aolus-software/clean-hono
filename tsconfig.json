@@ -119,7 +119,8 @@
 			"@modules": ["./src/modules"],
 			"@modules/*": ["./src/modules/*"],
 			"@bull": ["./src/bull"],
-			"@bull/*": ["./src/bull/*"]
+			"@bull/*": ["./src/bull/*"],
+			"@i18n": ["./src/libs/i18n"]
 		}
 	}
 }

@@ -8,6 +8,7 @@ import {
 } from "./schema";
 import { AuthMiddleware } from "@hono-libs";
 import { Env } from "@types";
+import { t } from "@i18n";
 
 const SelectOptionsRoutes = new OpenAPIHono<Env>();
 
@@ -44,12 +45,7 @@ SelectOptionsRoutes.openapi(PermissionSelectOptionsRoute, async (c) => {
 	const service = c.get("settingSelectOption");
 	const options = await service.getPermissionOptions();
 
-	return ResponseToolkit.success(
-		c,
-		options,
-		"Fetched permission options successfully",
-		200,
-	);
+	return ResponseToolkit.success(c, options, t("common.retrieved"), 200);
 });
 
 // -------------------
@@ -83,12 +79,7 @@ SelectOptionsRoutes.openapi(RoleSelectOptionsRoute, async (c) => {
 	const service = c.get("settingSelectOption");
 	const options = await service.getRoleOptions();
 
-	return ResponseToolkit.success(
-		c,
-		options,
-		"Fetched role options successfully",
-		200,
-	);
+	return ResponseToolkit.success(c, options, t("common.retrieved"), 200);
 });
 
 export default SelectOptionsRoutes;
