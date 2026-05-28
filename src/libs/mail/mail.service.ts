@@ -3,6 +3,7 @@ import path from "path";
 import { transporter } from "./transport.mail";
 import { AppConfig, MailConfig } from "@config";
 import { logger } from "@utils";
+import { DEFAULT_LOCALE, type Locale } from "@i18n";
 
 export interface EmailOptions {
 	to: string;
@@ -11,23 +12,30 @@ export interface EmailOptions {
 	variables?: Record<string, string>;
 	html?: string;
 	text?: string;
+	lang?: Locale;
 }
+
+const resolveTemplatePath = (template: string, lang?: Locale): string => {
+	const baseDir = path.join(__dirname, "templates");
+	if (lang && lang !== DEFAULT_LOCALE) {
+		const localized = path.join(baseDir, `${template}.${lang}.html`);
+		if (fs.existsSync(localized)) return localized;
+	}
+	return path.join(baseDir, `${template}.html`);
+};
 
 export const EmailService = {
 	async sendEmail(options: EmailOptions) {
 		let htmlContent = options.html;
 
-		// if the option is using template, we need to find the template and replace the key
 		if (options.template) {
 			try {
-				const templatePath = path.join(
-					__dirname,
-					"templates",
-					`${options.template}.html`,
+				const templatePath = resolveTemplatePath(
+					options.template,
+					options.lang,
 				);
 				htmlContent = fs.readFileSync(templatePath, "utf-8");
 
-				// Replace variables in template
 				if (options.variables) {
 					Object.entries(options.variables).forEach(([key, value]) => {
 						htmlContent = htmlContent?.replace(
@@ -43,7 +51,6 @@ export const EmailService = {
 			}
 		}
 
-		// update title for dev / staging
 		if (AppConfig.APP_ENV !== "production") {
 			options.subject = `[${AppConfig.APP_ENV.toUpperCase()}] ${options.subject}`;
 		}

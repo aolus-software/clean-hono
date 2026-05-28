@@ -7,10 +7,8 @@ import { Env } from "@types";
 import { DateToolkit, logger } from "@utils";
 import { AppConfig } from "@config";
 import { ERROR_CODES } from "./error-codes.constant";
+import { t } from "@i18n";
 
-/**
- * Standard error response format
- */
 interface ErrorResponse {
 	success: false;
 	message: string;
@@ -27,7 +25,7 @@ export const registerException = (app: Hono<Env>) => {
 		return c.json(
 			{
 				success: false,
-				message: "Route not found",
+				message: t("errors.routeNotFound"),
 				code: ERROR_CODES.ROUTE_NOT_FOUND,
 				errors: [],
 				data: null,
@@ -60,7 +58,7 @@ export const registerException = (app: Hono<Env>) => {
 			return c.json(
 				{
 					success: false,
-					message: "Validation failed",
+					message: t("errors.validationFailed"),
 					code: ERROR_CODES.VALIDATION_ERROR,
 					errors: formatZodError(err),
 					data: null,
@@ -70,7 +68,6 @@ export const registerException = (app: Hono<Env>) => {
 			);
 		}
 
-		// Handle custom AppError instances
 		if (err instanceof AppError) {
 			const requestContext = {
 				method: c.req.method,
@@ -86,7 +83,6 @@ export const registerException = (app: Hono<Env>) => {
 
 			logger.error(err, `${err.name}: ${err.message}`, requestContext);
 
-			// Cast to any to avoid Hono's strict status code typing
 			return c.json(
 				{
 					success: false,
@@ -102,12 +98,11 @@ export const registerException = (app: Hono<Env>) => {
 		}
 
 		if (err instanceof HTTPException) {
-			// If the error is a 404 from Hono (e.g. route not found), ensure we return 404
 			if (err.status === 404) {
 				return c.json(
 					{
 						success: false,
-						message: "Route not found",
+						message: t("errors.routeNotFound"),
 						code: ERROR_CODES.ROUTE_NOT_FOUND,
 						errors: [],
 						data: null,
@@ -146,7 +141,7 @@ export const registerException = (app: Hono<Env>) => {
 		return c.json(
 			{
 				success: false,
-				message: "Internal server error",
+				message: t("errors.internalServerError"),
 				code: ERROR_CODES.INTERNAL_ERROR,
 				errors: [],
 				data: null,

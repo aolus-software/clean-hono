@@ -20,7 +20,7 @@ jobs:
           bun-version: latest
 
       - name: Install dependencies
-        run: bun install
+        run: bun install --frozen-lockfile
 
       - name: Run ESLint
         run: bun run lint
@@ -41,14 +41,30 @@ jobs:
           bun-version: latest
 
       - name: Install dependencies
-        run: bun install
+        run: bun install --frozen-lockfile
 
       - name: Run TypeScript compiler
-        run: bun run tsc --noEmit
+        run: bun run typecheck
 
   database:
     name: Database Check
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: clean_hono_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/clean_hono_test
 
     steps:
       - uses: actions/checkout@v4
@@ -59,16 +75,25 @@ jobs:
           bun-version: latest
 
       - name: Install dependencies
-        run: bun install
+        run: bun install --frozen-lockfile
 
       - name: Check Drizzle migrations are up to date
         run: |
-          npx drizzle-kit generate
+          bunx --bun drizzle-kit generate
           if [ -n "$(git status --porcelain src/libs/database/postgres/migrations)" ]; then
-            echo "Error: Drizzle migrations are not up to date. Please run 'npx drizzle-kit generate' and commit the changes."
+            echo "Error: Drizzle migrations are not up to date. Please run 'bun run db:generate' and commit the changes."
             git status src/libs/database/postgres/migrations
             exit 1
           fi
+
+      - name: Run Drizzle migrations
+        run: bun run db:migrate
+
+      - name: Run Drizzle check
+        run: bunx --bun drizzle-kit check
+
+      - name: Run Drizzle introspect
+        run: bunx --bun drizzle-kit introspect
 
   build:
     name: Build
@@ -84,7 +109,7 @@ jobs:
           bun-version: latest
 
       - name: Install dependencies
-        run: bun install
+        run: bun install --frozen-lockfile
 
       - name: Build server
         run: bun run build
