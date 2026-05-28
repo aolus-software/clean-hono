@@ -125,10 +125,10 @@ HomeRoutes.openapi(HealthRoute, async (c) => {
 		// Redis remains unhealthy
 	}
 
-	// Check Redis Queue
+	// Check Redis Queue (shares the same Redis instance)
 	try {
 		const start = Date.now();
-		await RedisClient.getQueueRedisClient().ping();
+		await RedisClient.getRedisClient().ping();
 		services.redisQueue = {
 			status: "healthy",
 			responseTime: Date.now() - start,
