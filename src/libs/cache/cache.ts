@@ -1,22 +1,15 @@
-import Redis from "ioredis";
+import type { RedisClient as BunRedisClient } from "bun";
 import { logger } from "@utils";
 import { RedisClient } from "@database";
 
 class Cache {
-	private static redis: Redis | null = null;
-
-	private static getRedisClient(): Redis {
-		if (!this.redis) {
-			this.redis = RedisClient.getRedisClient();
-		}
-
-		return this.redis;
+	private static getClient(): BunRedisClient {
+		return RedisClient.getRedisClient();
 	}
 
 	static async get<T>(key: string): Promise<T | null> {
 		try {
-			const client = this.getRedisClient();
-			const value = await client.get(key);
+			const value = await this.getClient().get(key);
 			return value ? (JSON.parse(value) as T) : null;
 		} catch (error) {
 			logger.error(error, `Error getting cache for key ${key}:`);
@@ -30,8 +23,12 @@ class Cache {
 		ttl: number = 3600,
 	): Promise<void> {
 		try {
-			const client = this.getRedisClient();
-			await client.set(key, JSON.stringify(value), "EX", ttl);
+			await this.getClient().send("SET", [
+				key,
+				JSON.stringify(value),
+				"EX",
+				String(ttl),
+			]);
 		} catch (error) {
 			logger.error(error, `Error setting cache for key ${key}:`);
 		}
@@ -39,8 +36,7 @@ class Cache {
 
 	static async delete(key: string): Promise<void> {
 		try {
-			const client = this.getRedisClient();
-			await client.del(key);
+			await this.getClient().del(key);
 		} catch (error) {
 			logger.error(error, `Error deleting cache for key ${key}:`);
 		}
@@ -48,8 +44,7 @@ class Cache {
 
 	static async flush(): Promise<void> {
 		try {
-			const client = this.getRedisClient();
-			await client.flushdb();
+			await this.getClient().send("FLUSHDB", []);
 		} catch (error) {
 			logger.error(error, "Error flushing Redis cache:");
 		}
@@ -57,9 +52,8 @@ class Cache {
 
 	static async exists(key: string): Promise<boolean> {
 		try {
-			const client = this.getRedisClient();
-			const exists = await client.exists(key);
-			return exists === 1;
+			const exists = await this.getClient().exists(key);
+			return exists === true;
 		} catch (error) {
 			logger.error(error, `Error checking existence of key ${key}:`);
 			return false;
@@ -87,8 +81,7 @@ class Cache {
 
 	static async getKeys(pattern: string): Promise<string[]> {
 		try {
-			const client = this.getRedisClient();
-			const keys = await client.keys(pattern);
+			const keys = await this.getClient().keys(pattern);
 			return keys;
 		} catch (error) {
 			logger.error(error, `Error getting keys with pattern ${pattern}:`);
@@ -96,12 +89,9 @@ class Cache {
 		}
 	}
 
-	static async disconnect(): Promise<void> {
+	static disconnect(): void {
 		try {
-			if (this.redis) {
-				await this.redis.quit();
-				this.redis = null;
-			}
+			this.getClient().close();
 		} catch (error) {
 			logger.error(error, "Error disconnecting from Redis:");
 		}

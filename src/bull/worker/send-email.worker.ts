@@ -3,8 +3,6 @@ import { RedisClient } from "@database";
 import { logger } from "@utils";
 import { EmailOptions, EmailService } from "@mail/mail.service";
 
-const queueRedis = RedisClient.getQueueRedisClient();
-
 const worker = new Worker<EmailOptions>(
 	"send-email",
 	async (job) => {
@@ -17,7 +15,7 @@ const worker = new Worker<EmailOptions>(
 		}
 	},
 	{
-		connection: queueRedis,
+		connection: RedisClient.getQueueConnection(),
 	},
 );
 

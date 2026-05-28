@@ -126,9 +126,9 @@ async function main() {
 	const migrator = new ClickHouseMigrator();
 	const command = process.argv[2];
 
-	let executed: string[] = [];
-	let all: Array<IMigrationFile> = [];
-	let pending: Array<IMigrationFile> = [];
+	let executed: string[];
+	let all: Array<IMigrationFile>;
+	let pending: Array<IMigrationFile>;
 
 	switch (command) {
 		case "migrate":
