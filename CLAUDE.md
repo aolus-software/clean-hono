@@ -37,9 +37,9 @@ Note: the root `README.md` references `dev:server`, `dev:worker`, `dev:all`, `bu
 2. `loggerMiddleware`, `performanceMiddleware`
 3. `localeMiddleware` — parses `Accept-Language` header and sets locale via `AsyncLocalStorage`
 4. `diMiddleware` — injects services from the DI container into `c.var`
-4. `bodyLimitMiddleware`, `corsMiddleware`, `securityHeadersMiddleware`, `rateLimiterMiddleware`
-5. `registerException(app)` — centralized error handler (see `src/libs/hono/errors/error.handler.ts`)
-6. `app.route("/", bootstrap)` mounts `src/modules/index.ts`, which wires `/`, `/auth`, `/profile`, `/settings`, plus `/docs` (Scalar) and `/docs/openapi.json`.
+5. `bodyLimitMiddleware`, `corsMiddleware`, `securityHeadersMiddleware`, `rateLimiterMiddleware`
+6. `registerException(app)` — centralized error handler (see `src/libs/hono/errors/error.handler.ts`)
+7. `app.route("/", bootstrap)` mounts `src/modules/index.ts`, which wires `/`, `/auth`, `/profile`, `/settings`, plus `/docs` (Scalar) and `/docs/openapi.json`.
 
 ### Dependency injection
 

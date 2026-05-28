@@ -12,7 +12,7 @@ import type {
 	MailConfig,
 	ClickHouseConfig,
 } from "@types";
-import { logger } from "@utils";
+import { logger } from "@utils/hono/logger";
 
 /**
  * Validates a URL format
