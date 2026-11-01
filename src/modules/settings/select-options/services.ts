@@ -4,10 +4,10 @@ import { ISelectOptionsService } from "./service.interface";
 
 export class SelectOptionsService implements ISelectOptionsService {
 	async getPermissionOptions(): Promise<PermissionSelectOptions[]> {
-		return await PermissionRepository().selectOptions();
+		return await PermissionRepository().getSelectOptions();
 	}
 
 	async getRoleOptions(): Promise<{ id: string; name: string }[]> {
-		return await RoleRepository().selectOptions();
+		return await RoleRepository().getSelectOptions();
 	}
 }

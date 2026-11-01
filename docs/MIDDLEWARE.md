@@ -1,476 +1,72 @@
-# Middleware Documentation
+# Middleware
 
-## Overview
+Hono middleware is this project's extension mechanism. Shared middleware lives in
+`src/libs/hono/middlewares/` and is exported from `@hono-libs`.
 
-This application uses a well-organized middleware architecture divided into two main categories:
+## The global stack
 
-1. **Core Middleware**: Essential middleware that runs on every request
-2. **Security Middleware**: Security-focused middleware for authentication, authorization, and protection
+Registered in `src/app.ts`, in this order, for every request:
 
-## Middleware Categories
+| #   | Middleware                  | File                                      | Does                                                                        |
+| --- | --------------------------- | ----------------------------------------- | --------------------------------------------------------------------------- |
+| 1   | `requestIdMiddleware`       | `core/request-id.middleware.ts`           | Reuses or generates `X-Request-ID`, sets it on the context and the response |
+| 2   | `loggerMiddleware`          | `core/logger.middleware.ts`               | Structured request logging (hono-pino)                                      |
+| 3   | `performanceMiddleware`     | `core/performance.middleware.ts`          | Response timing                                                             |
+| 4   | `localeMiddleware`          | `core/locale.middleware.ts`               | `Accept-Language` → request locale; sets `Content-Language`                 |
+| 5   | `diMiddleware`              | `core/di.middleware.ts`                   | Puts the registered services on the context (`c.get("userService")`)        |
+| 6   | `bodyLimitMiddleware`       | `security/body-limit.middleware.ts`       | Rejects bodies over 100KB                                                   |
+| 7   | `corsMiddleware`            | `security/cors.middleware.ts`             | CORS from `ALLOWED_HOST`                                                    |
+| 8   | `securityHeadersMiddleware` | `security/security-headers.middleware.ts` | `hono/secure-headers`                                                       |
+| 9   | `rateLimiterMiddleware`     | `security/rate-limiter.middleware.ts`     | 100 requests / 60 s per connection address                                  |
 
-### Core Middleware
+After the stack, `registerException(app)` installs `onError` and `notFound`, and
+`app.route("/", modules)` mounts `src/modules/index.ts`.
 
-Core middleware is essential for all requests and provides fundamental functionality like logging, request tracking, and dependency injection.
+## Per-route middleware
 
-Location: `src/libs/hono/middlewares/core/`
+| Middleware               | File                                       | Does                                                                   |
+| ------------------------ | ------------------------------------------ | ---------------------------------------------------------------------- |
+| `AuthMiddleware`         | `security/auth.middleware.ts`              | Verifies the access token, loads `UserInformation`, sets `currentUser` |
+| `permissionGuard([...])` | `src/libs/hono/guards/permission.guard.ts` | 403 unless the user holds every listed permission (superuser bypasses) |
+| `roleGuard([...])`       | `src/libs/hono/guards/role.guard.ts`       | 403 unless the user holds every listed role (superuser bypasses)       |
 
-#### Request ID Middleware
+They are attached in the route definition, so `@hono/zod-openapi` runs them before validation and the
+handler:
 
-**File**: `request-id.middleware.ts`
-
-Generates or retrieves a unique request ID for tracing and debugging.
-
-- **Order**: First middleware (must run before all others)
-- **Purpose**: Request tracing and correlation
-- **Headers Added**: `X-Request-ID`
-- **Context Variable**: `requestId`
-
-**Usage in logs**:
-
-```typescript
-const requestId = c.get("requestId");
-logger.info({ requestId }, "Processing request");
-```
-
-#### Logger Middleware
-
-**File**: `logger.middleware.ts`
-
-Provides structured logging using Pino logger for all HTTP requests.
-
-- **Order**: Second (after request ID)
-- **Purpose**: HTTP request/response logging
-- **Features**:
-  - Automatic request logging
-  - Response time tracking
-  - Status code logging
-  - Request ID correlation
-
-**Log Example**:
-
-```json
-{
-  "level": 30,
-  "time": 1676123456789,
-  "req": {
-    "method": "GET",
-    "url": "/api/users",
-    "headers": {...}
-  },
-  "res": {
-    "statusCode": 200
-  },
-  "responseTime": 45,
-  "requestId": "abc123"
-}
-```
-
-#### Performance Middleware
-
-**File**: `performance.middleware.ts`
-
-Monitors request duration and warns about slow requests.
-
-- **Purpose**: Performance monitoring and optimization
-- **Thresholds**:
-  - `> 1000ms`: Warning logged
-  - `> 500ms`: Info logged
-  - `< 500ms`: Debug logged
-
-**Usage**:
-The middleware automatically logs all requests with their duration. Review logs to identify slow endpoints.
-
-#### Dependency Injection Middleware
-
-**File**: `di.middleware.ts`
-
-Injects registered services into the Hono context for easy access in route handlers.
-
-- **Purpose**: Dependency injection pattern
-- **Injected Services**:
-  - `authService`: Authentication service
-  - `userService`: User management service
-  - `roleService`: Role management service
-  - `permissionService`: Permission management service
-  - `profileService`: User profile service
-  - `settingSelectOption`: Select options service
-
-**Usage in Routes**:
-
-```typescript
-const userService = c.get("userService");
-const users = await userService.getAllUsers();
-```
-
-### Security Middleware
-
-Security middleware handles authentication, authorization, rate limiting, and various security headers.
-
-Location: `src/libs/hono/middlewares/security/`
-
-#### Authentication Middleware
-
-**File**: `auth.middleware.ts`
-
-Validates JWT tokens and loads user information.
-
-- **Purpose**: User authentication
-- **Token Source**: `Authorization` header (Bearer token)
-- **Context Variable**: `currentUser`
-- **Features**:
-  - JWT token validation
-  - User information caching
-  - Automatic token expiration handling
-
-**Usage**:
-
-```typescript
-import { AuthMiddleware } from "@hono-libs/middlewares";
-
-// Apply to protected routes
-app.get("/protected", AuthMiddleware, async (c) => {
-	const user = c.get("currentUser");
-	return c.json({ user });
+```ts
+const RoleListRoute = createRoute({
+	method: "get",
+	path: "",
+	middleware: [AuthMiddleware, permissionGuard(["role list"])] as const,
+	// request, responses, summary, ...
 });
 ```
 
-**Error Responses**:
+Do not attach them with `Router.use(...)`: Hono runs matching handlers in registration order and
+`.use()` ignores the HTTP method, so a guard registered after `.openapi()` never protects that
+route, and a guard on `"/:id"` would gate every method on that path.
 
-- `401 UNAUTHORIZED`: No token provided
-- `401 UNAUTHORIZED`: Invalid token
-- `401 UNAUTHORIZED`: User not found
+## Writing a middleware
 
-#### CORS Middleware
-
-**File**: `cors.middleware.ts`
-
-Configures Cross-Origin Resource Sharing for API access from different origins.
-
-- **Purpose**: Control cross-origin requests
-- **Configuration**: Loaded from `@config/cors.config.ts`
-- **Headers Managed**:
-  - `Access-Control-Allow-Origin`
-  - `Access-Control-Allow-Methods`
-  - `Access-Control-Allow-Headers`
-  - `Access-Control-Expose-Headers`
-  - `Access-Control-Max-Age`
-
-**Configuration**:
-Edit `src/libs/config/cors.config.ts` to customize CORS settings.
-
-#### Security Headers Middleware
-
-**File**: `security-headers.middleware.ts`
-
-Adds security-related HTTP headers to protect against common vulnerabilities.
-
-- **Purpose**: Web security best practices
-- **Headers Added**:
-  - `Content-Security-Policy`: Prevents XSS attacks
-  - `Strict-Transport-Security`: Forces HTTPS
-  - `X-Content-Type-Options`: Prevents MIME sniffing
-  - `X-Frame-Options`: Prevents clickjacking
-  - `Referrer-Policy`: Controls referrer information
-  - `Permissions-Policy`: Controls browser features
-
-**Security Features**:
-
-- HSTS with 1 year max-age
-- Removes `X-Powered-By` header
-- Cross-origin isolation
-- Origin agent clustering
-
-#### Rate Limiter Middleware
-
-**File**: `rate-limiter.middleware.ts`
-
-Prevents API abuse by limiting requests per IP address.
-
-- **Purpose**: DDoS protection and abuse prevention
-- **Default Limits**:
-  - **Window**: 15 minutes
-  - **Max Requests**: 100 per window
-- **Key**: Client IP address (from `x-forwarded-for` header)
-
-**Response on Limit Exceeded**:
-
-```json
-{
-	"success": false,
-	"message": "Too many requests, please try again later.",
-	"code": "TOO_MANY_REQUESTS",
-	"statusCode": 429
-}
-```
-
-**Customization**:
-Edit the middleware file to adjust limits for specific routes:
-
-```typescript
-// Example: Custom rate limit for specific endpoint
-app.post(
-	"/api/login",
-	rateLimiter({
-		windowMs: 15 * 60 * 1000,
-		limit: 5, // Only 5 login attempts per 15 minutes
-		keyGenerator: (c) => c.req.header("x-forwarded-for") ?? "",
-	}),
-	loginHandler,
-);
-```
-
-#### Body Limit Middleware
-
-**File**: `body-limit.middleware.ts`
-
-Restricts the maximum size of request payloads to prevent memory exhaustion attacks.
-
-- **Purpose**: Prevent large payload attacks
-- **Default Limit**: 100KB
-- **Applies To**: All request bodies (JSON, form data, etc.)
-
-**Error Response**:
-
-```json
-{
-	"success": false,
-	"message": "Payload too large",
-	"code": "PAYLOAD_TOO_LARGE",
-	"statusCode": 413
-}
-```
-
-**Customization for File Uploads**:
-
-```typescript
-// Example: Higher limit for file upload endpoint
-app.post(
-	"/api/upload",
-	bodyLimit({ maxSize: 10 * 1024 * 1024 }), // 10MB
-	uploadHandler,
-);
-```
-
-## Middleware Execution Order
-
-The order of middleware is critical for proper application functionality:
-
-```
-1. Request ID Middleware       ← Generate/retrieve request ID
-2. Logger Middleware           ← Start request logging
-3. Performance Middleware      ← Start performance monitoring
-4. DI Middleware              ← Inject services into context
-5. Body Limit Middleware      ← Check payload size
-6. CORS Middleware            ← Handle CORS headers
-7. Security Headers Middleware ← Add security headers
-8. Rate Limiter Middleware    ← Check rate limits
-9. Route-specific middleware   ← Auth, guards, etc.
-10. Route Handler             ← Your business logic
-```
-
-## Creating Custom Middleware
-
-### Core Middleware
-
-Create core middleware for functionality needed by all requests:
-
-```typescript
-// src/libs/hono/middlewares/core/my-middleware.ts
-import { Context, Next } from "hono";
-
-export const myMiddleware = async (c: Context, next: Next) => {
-	// Before request
-	console.log("Before request");
-
-	await next();
-
-	// After request
-	console.log("After request");
-};
-```
-
-### Security Middleware
-
-Create security middleware for authentication/authorization concerns:
-
-```typescript
-// src/libs/hono/middlewares/security/my-security.ts
-import { UnauthorizedError } from "@errors";
-import { Context, Next } from "hono";
-
-export const mySecurityMiddleware = async (c: Context, next: Next) => {
-	const token = c.req.header("X-Custom-Token");
-
-	if (!token) {
-		throw new UnauthorizedError("Custom token required");
-	}
-
-	// Validate token...
-
-	await next();
-};
-```
-
-### Adding to Index
-
-Update the appropriate index file:
-
-```typescript
-// src/libs/hono/middlewares/core/index.ts or security/index.ts
-export * from "./my-middleware";
-```
-
-## Best Practices
-
-### 1. Keep Middleware Focused
-
-Each middleware should have a single responsibility:
-
-✅ **Good**:
-
-```typescript
-// Focused on request ID generation
-export const requestIdMiddleware = async (c: Context, next: Next) => {
-	const requestId = getOrGenerateRequestId(c.req.header("x-request-id"));
-	c.set("requestId", requestId);
-	await next();
-};
-```
-
-❌ **Bad**:
-
-```typescript
-// Mixing multiple concerns
-export const setupMiddleware = async (c: Context, next: Next) => {
-	const requestId = generateId();
-	c.set("requestId", requestId);
-
-	const user = await validateUser(c);
-	c.set("user", user);
-
-	await logRequest(c);
-	await next();
-};
-```
-
-### 2. Use Type Safety
-
-Always type your middleware with proper Hono types:
-
-```typescript
+```ts
 import type { MiddlewareHandler } from "hono";
 import { Env } from "@types";
 
-export const myMiddleware: MiddlewareHandler<Env> = async (c, next) => {
-	// TypeScript knows about your context variables
-	const requestId = c.get("requestId"); // ✅ Type-safe
+export const exampleMiddleware: MiddlewareHandler<Env> = async (c, next) => {
 	await next();
+	c.header("X-Example", "1");
 };
 ```
 
-### 3. Handle Errors Consistently
+1. Put it in `core/` (request plumbing) or `security/` (protection), export it from that folder's
+   `index.ts`.
+2. Global: register it in `src/app.ts` at the right point in the order. Per route: add it to the
+   route's `middleware` array.
+3. Read configuration from `@config`, throw errors from `@errors`, never build a response body by
+   hand.
+4. Update this page and `.claude/rules/middleware.md`.
 
-Use custom error classes for consistent error responses:
+## The plugin registry
 
-```typescript
-import { UnauthorizedError, BadRequestError } from "@errors";
-
-export const authMiddleware = async (c: Context, next: Next) => {
-	const token = c.req.header("authorization");
-
-	if (!token) {
-		throw new UnauthorizedError("No token provided");
-	}
-
-	if (!isValidToken(token)) {
-		throw new UnauthorizedError("Invalid token");
-	}
-
-	await next();
-};
-```
-
-### 4. Document Your Middleware
-
-Add comprehensive JSDoc comments:
-
-````typescript
-/**
- * Rate limiter middleware
- * Prevents API abuse by limiting requests per IP address
- *
- * @example
- * ```typescript
- * app.use("*", rateLimiterMiddleware);
- * ```
- */
-export const rateLimiterMiddleware = ...
-````
-
-### 5. Test Your Middleware
-
-Write unit tests for custom middleware:
-
-```typescript
-import { describe, it, expect } from "bun:test";
-import { myMiddleware } from "./my-middleware";
-
-describe("myMiddleware", () => {
-	it("should add custom header", async () => {
-		// Test implementation
-	});
-});
-```
-
-## Troubleshooting
-
-### Middleware Not Running
-
-**Symptom**: Middleware doesn't seem to execute
-
-**Solutions**:
-
-1. Check middleware order in `app.ts`
-2. Ensure middleware is imported correctly
-3. Verify middleware calls `await next()`
-4. Check for errors thrown before middleware execution
-
-### Context Variables Not Available
-
-**Symptom**: `c.get("variable")` returns undefined
-
-**Solutions**:
-
-1. Ensure DI middleware runs before your handler
-2. Check middleware execution order
-3. Verify the variable is set in previous middleware
-
-### Rate Limiting Issues
-
-**Symptom**: Rate limiter blocks legitimate requests
-
-**Solutions**:
-
-1. Check `keyGenerator` configuration
-2. Verify proxy headers (`x-forwarded-for`)
-3. Adjust `windowMs` and `limit` values
-4. Consider per-user rate limiting instead of per-IP
-
-### CORS Errors
-
-**Symptom**: Browser shows CORS errors
-
-**Solutions**:
-
-1. Check `cors.config.ts` configuration
-2. Verify `origin` matches client domain
-3. Ensure preflight requests (OPTIONS) are handled
-4. Check `allowedHeaders` includes required headers
-
-## Further Reading
-
-- [Hono Middleware Guide](https://hono.dev/guides/middleware)
-- [OWASP Security Headers](https://owasp.org/www-project-secure-headers/)
-- [JWT Best Practices](https://tools.ietf.org/html/rfc8725)
-- [Rate Limiting Strategies](https://cloud.google.com/architecture/rate-limiting-strategies-techniques)
+`src/libs/plugins/` holds an optional plugin builder and registry with two examples
+(`health-check.plugin.ts`, `request-logger.plugin.ts`). Nothing in the request path uses it.

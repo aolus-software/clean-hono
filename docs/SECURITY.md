@@ -1,481 +1,120 @@
-# API Security Documentation
+# Security
 
-## Overview
+How authentication, authorization, tokens, and the security middleware work in this template. To
+report a vulnerability, see [`.github/SECURITY.md`](../.github/SECURITY.md).
 
-This document describes the security mechanisms, authentication flows, and best practices implemented in the Clean Hono API.
+## Authentication
 
-## Table of Contents
+### Tokens
 
-1. [Authentication & Authorization](#authentication--authorization)
-2. [Password Security](#password-security)
-3. [Token Management](#token-management)
-4. [Rate Limiting](#rate-limiting)
-5. [Input Validation](#input-validation)
-6. [Security Headers](#security-headers)
-7. [RBAC (Role-Based Access Control)](#rbac-role-based-access-control)
-8. [Best Practices](#best-practices)
+| Token   | Secret               | Lifetime | `type` claim |
+| ------- | -------------------- | -------- | ------------ |
+| Access  | `JWT_SECRET`         | 1 day    | `access`     |
+| Refresh | `JWT_REFRESH_SECRET` | 7 days   | `refresh`    |
 
----
+Both are HS256 JWTs with payload `{ id, type, exp }` (the refresh token adds `jti`), signed by `JWTToolkit`
+(`src/libs/utils/hono/jwt.ts`) from `JWT_CONFIG`. Both secrets are required at boot; there is no
+fallback value.
 
-## Authentication & Authorization
+- `AuthMiddleware` accepts only `type: "access"`. A refresh token sent as a bearer token is 401.
+- `POST /auth/refresh` accepts only `type: "refresh"`, re-loads the user (must be `active` and not
+  deleted), and issues a new pair.
+- Every verification failure (signature, expiry, malformed token, wrong type) is 401, never 500.
+- Refresh tokens are revocable. The current refresh-token id (`jti`) is stored in Redis at
+  `RefreshTokenCacheKey(userId)` (`refresh_token:<userId>`, TTL 7 days). `/auth/refresh` rejects a
+  token whose `jti` is not the stored one, and every successful login or refresh rotates it, so a
+  refresh token works once. A password change (`PATCH /profile/password`), password reset, admin password reset, user delete, and a user update that leaves the status anything but `active` call `revokeSessions` (`@cache`), which deletes the stored id and the
+  cached `UserInformation`. Access tokens are not tracked; they expire after 1 day and stop working
+  as soon as the user is no longer active.
 
-### Authentication Flow
+### AuthMiddleware
 
-The API uses **JWT (JSON Web Tokens)** for authentication. The authentication flow works as follows:
+`src/libs/hono/middlewares/security/auth.middleware.ts` reads `Authorization: Bearer <token>`,
+verifies it, then loads `UserInformation` (`{ id, name, email, roles, permissions }`) cache-aside from
+Redis at `UserInformationCacheKey(id)` (TTL 3600 s). The database lookup requires
+`status = 'active'` and `deleted_at IS NULL`; otherwise 401.
 
-#### 1. User Registration
+### Cache invalidation
 
-```
-POST /auth/register
-{
-  "name": "John Doe",
-  "email": "john@example.com",
-  "password": "SecurePass123!"
-}
-```
+Every write that changes what a user may do deletes the affected cache entries so the change applies
+on the next request: user update, delete, and admin password reset; profile update; role update and
+delete (every holder of the role); permission update and delete (every holder of a role granting it).
 
-- Password is hashed using bcrypt before storage
-- Email verification link is sent to the user
-- User account is created but marked as unverified
+### Login
 
-#### 2. Email Verification
+1. Look up the live user by email.
+2. Compare the password with bcrypt — against a fixed dummy hash when the email is unknown, so both
+   paths take the same time.
+3. Unknown email and wrong password return the **same** 400 message.
+4. Only then: unverified → 400, status not `active` → 400.
 
-```
-POST /auth/verify-email
-{
-  "token": "verification_token_from_email"
-}
-```
+### Passwords
 
-- Verifies user's email address
-- Activates the account for login
+- bcrypt via `Hash` (`@utils`).
+- Strong-password rule (`StrongPassword` in `@default`): at least 8 characters with upper, lower,
+  digit, and symbol. Applied on register, reset, admin reset, admin create, and profile password
+  change. Login accepts any non-empty string.
 
-#### 3. Login
+### Verification and reset tokens
 
-```
-POST /auth/login
-{
-  "email": "john@example.com",
-  "password": "SecurePass123!"
-}
-```
+- Random 255-character tokens from `crypto.getRandomValues` (`StrToolkit.random`), unique in the
+  database.
+- Expire 1 hour after issue (`verificationTokenLifetime()`, `resetPasswordTokenLifetime()`, computed
+  at issue time).
+- Issuing a new token marks the user's earlier unused tokens of that kind as used.
+- Consuming one checks existence, expiry, and `usedAt`, then stamps `usedAt` on every unused token of
+  that kind for the user in the same transaction as the write it authorises.
+- `forgot-password` and `resend-verification` always return 200, so they do not reveal whether an
+  address is registered.
 
-**Response:**
+## Authorization (RBAC)
 
-```json
-{
-	"success": true,
-	"message": "Login successful",
-	"data": {
-		"user": {
-			"id": "uuid",
-			"name": "John Doe",
-			"email": "john@example.com",
-			"role": "user"
-		},
-		"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-	}
-}
-```
+- Guards are attached per route in `createRoute({ middleware: [AuthMiddleware, guard] })`, which runs
+  before validation and the handler.
+- `permissionGuard([...])` requires every listed permission; `roleGuard([...])` every listed role.
+  `superuser` bypasses both.
+- Permissions are `<group> <action>` over `user`, `role`, `permission` × `list`, `create`, `detail`,
+  `edit`, `delete` (15). Seeded roles `superuser` and `admin` both hold all 15.
+- Privilege-granting routes — `POST /settings/users/{id}/reset-password` and the select-options
+  routes — require the `superuser` role.
+- Routes with no guard are open to any authenticated user (profile routes act only on the caller).
 
-#### 4. Authenticated Requests
+## Rate limiting
 
-Include the JWT token in the `Authorization` header:
+Global, 100 requests per 60 s, keyed on the connection address (never `X-Forwarded-For`). The store is
+in memory per process, so cluster workers each count separately, and behind a reverse proxy every
+client shares the proxy's address — enforce a limit at the proxy in production.
 
-```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
+## CORS
 
-### Authorization Middleware
+`ALLOWED_HOST` is a comma-separated origin list; empty means `*`. Methods `GET, POST, PATCH, DELETE,
+OPTIONS`; headers `Content-Type, Authorization, Accept-Language`; `credentials: false`.
 
-Protected routes require authentication. The `AuthMiddleware` validates JWT tokens and extracts user information.
+## Security headers
 
-**Example Protected Route:**
+`hono/secure-headers` (`security-headers.middleware.ts`): CSP, HSTS, `X-Content-Type-Options`,
+referrer policy `no-referrer`, cross-origin policies, `X-Powered-By` removed.
 
-```typescript
-// All profile routes require authentication
-ProfileRoutes.use("*", AuthMiddleware);
-```
+## Request size
 
----
+Bodies over 100KB are rejected (`body-limit.middleware.ts`).
 
-## Password Security
+## Validation
 
-### Password Requirements
+Every body, query, and path parameter is validated by Zod before the handler runs; `{id}` must be a
+uuid. List sort keys and filter keys are allow-listed in the repositories, so no raw query value
+reaches a Drizzle `orderBy` or `where`.
 
-**For Login (Basic Validation):**
+## API docs exposure
 
-- Minimum 8 characters
-- Maximum 128 characters
+`/docs` and `/docs/openapi.json` exist only when `ENABLE_API_DOCS=true` (default `false`). Leave it
+off outside local development.
 
-**For Registration/Password Changes (Strong Validation):**
+## Deployment checklist
 
-- Minimum 8 characters
-- At least one uppercase letter (A-Z)
-- At least one lowercase letter (a-z)
-- At least one number (0-9)
-- At least one special character (!@#$%^&\*()\_+-=[]{}|;:,.<>?)
-
-### Password Storage
-
-- Passwords are **never** stored in plain text
-- Passwords are hashed using **bcrypt** with automatic salt generation
-- Hash rounds are configured for optimal security/performance balance
-
-### Password Reset Flow
-
-#### 1. Request Reset
-
-```
-POST /auth/forgot-password
-{
-  "email": "user@example.com"
-}
-```
-
-- Sends password reset link to email
-- Token expires after a configured time period (default: 1 hour)
-- For security, same response is returned whether email exists or not
-
-#### 2. Reset Password
-
-```
-POST /auth/reset-password
-{
-  "token": "reset_token_from_email",
-  "password": "NewSecure123!"
-}
-```
-
-- Validates reset token
-- Ensures new password meets strong password requirements
-- Invalidates old tokens after successful reset
-
-### Password Change (Authenticated Users)
-
-```
-PUT /profile/password
-Authorization: Bearer <jwt_token>
-{
-  "current_password": "OldPass123!",
-  "new_password": "NewSecure123!"
-}
-```
-
-- Requires current password verification
-- New password must be different from current password
-- New password must meet strong password requirements
-
----
-
-## Token Management
-
-### JWT Token Structure
-
-```json
-{
-	"sub": "user_uuid",
-	"email": "user@example.com",
-	"role": "user",
-	"permissions": ["user.read", "user.update"],
-	"iat": 1640000000,
-	"exp": 1640086400
-}
-```
-
-### Token Lifecycle
-
-1. **Access Token**: Short-lived token for API requests (default: 24 hours)
-2. **Refresh Token**: Long-lived token for obtaining new access tokens (default: 7 days)
-
-### Token Validation
-
-All authenticated endpoints validate:
-
-- Token signature
-- Token expiration
-- User existence
-- User active status
-
-### Token Revocation
-
-Tokens can be invalidated through:
-
-- Password change (invalidates all existing tokens)
-- Logout (server-side token blacklisting via Redis)
-- Admin action (account suspension)
-
----
-
-## Rate Limiting
-
-Rate limiting is implemented to prevent abuse and brute force attacks.
-
-### Default Limits
-
-| Endpoint Type            | Limit        | Window     |
-| ------------------------ | ------------ | ---------- |
-| Authentication endpoints | 5 requests   | 15 minutes |
-| Profile updates          | 10 requests  | 1 hour     |
-| General API              | 100 requests | 15 minutes |
-
-### Rate Limit Headers
-
-Responses include rate limit information:
-
-```
-X-RateLimit-Limit: 100
-X-RateLimit-Remaining: 95
-X-RateLimit-Reset: 1640000000
-```
-
-### Rate Limit Exceeded Response
-
-```json
-{
-	"success": false,
-	"message": "Too many requests. Please try again later.",
-	"data": null
-}
-```
-
----
-
-## Input Validation
-
-All API inputs are validated using **Zod schemas** with OpenAPI integration.
-
-### Validation Levels
-
-1. **Type Validation**: Ensures correct data types
-2. **Format Validation**: Email format, UUID format, etc.
-3. **Business Rules**: Password strength, min/max lengths
-4. **Custom Validation**: Complex validation logic
-
-### Validation Error Response
-
-```json
-{
-	"success": false,
-	"message": "Validation Error",
-	"data": null,
-	"errors": {
-		"email": ["Must be a valid email address"],
-		"password": [
-			"Password must be at least 8 characters",
-			"Password must contain uppercase, lowercase, number, and special character"
-		]
-	}
-}
-```
-
-### Common Validations
-
-| Field Type        | Validation Rules                  |
-| ----------------- | --------------------------------- |
-| Email             | Valid email format, max 255 chars |
-| Password (basic)  | Min 8 chars, max 128 chars        |
-| Password (strong) | Min 8 chars + complexity rules    |
-| UUID              | Valid UUID v4 format              |
-| Name              | Min 1 char, max 255 chars         |
-| Remarks           | Optional, max 500 chars           |
-
----
-
-## Security Headers
-
-The API sets security headers on all responses:
-
-```
-X-Content-Type-Options: nosniff
-X-Frame-Options: DENY
-X-XSS-Protection: 1; mode=block
-Strict-Transport-Security: max-age=31536000; includeSubDomains
-Content-Security-Policy: default-src 'self'
-```
-
-### CORS Configuration
-
-CORS is configured based on environment:
-
-**Development:**
-
-- Allows all origins for testing
-- Credentials enabled
-
-**Production:**
-
-- Whitelist of allowed origins
-- Credentials enabled for trusted domains only
-
----
-
-## RBAC (Role-Based Access Control)
-
-### Roles
-
-The system implements hierarchical role-based access:
-
-1. **Super Admin**: Full system access
-2. **Admin**: Manage users and settings
-3. **User**: Standard user access
-
-### Permissions
-
-Granular permissions control specific actions:
-
-- `user.read`: View users
-- `user.create`: Create users
-- `user.update`: Update users
-- `user.delete`: Delete users
-- `role.manage`: Manage roles
-- `permission.manage`: Manage permissions
-
-### Permission Guards
-
-Routes can be protected with permission requirements:
-
-```typescript
-import { HasPermission } from "@guards";
-
-// Requires user.create permission
-UserRoutes.use("/", HasPermission("user.create"));
-```
-
-### Role Guards
-
-Routes can be protected with role requirements:
-
-```typescript
-import { HasRole } from "@guards";
-
-// Requires admin role
-AdminRoutes.use("/", HasRole("admin"));
-```
-
----
-
-## Best Practices
-
-### For API Consumers
-
-1. **Store tokens securely**
-   - Use httpOnly cookies or secure storage
-   - Never expose tokens in URLs
-   - Clear tokens on logout
-
-2. **Handle token expiration**
-   - Implement token refresh logic
-   - Gracefully handle 401 unauthorized responses
-   - Redirect to login when tokens expire
-
-3. **Use HTTPS**
-   - Always use HTTPS in production
-   - Never send credentials over HTTP
-
-4. **Implement rate limit handling**
-   - Respect rate limit headers
-   - Implement exponential backoff on failures
-   - Cache responses when appropriate
-
-5. **Validate responses**
-   - Check response status codes
-   - Validate response data structure
-   - Handle errors gracefully
-
-### For API Developers
-
-1. **Never log sensitive data**
-   - No passwords in logs
-   - Mask sensitive fields
-   - Use structured logging
-
-2. **Keep dependencies updated**
-   - Regular security updates
-   - Monitor vulnerability databases
-   - Use automated dependency scanning
-
-3. **Use environment variables**
-   - Never hardcode secrets
-   - Use different keys per environment
-   - Rotate keys regularly
-
-4. **Implement audit logging**
-   - Log authentication attempts
-   - Log permission changes
-   - Log data access
-
-5. **Regular security audits**
-   - Code reviews for security issues
-   - Penetration testing
-   - Vulnerability scanning
-
----
-
-## Security Checklist
-
-### Authentication
-
-- [x] JWT-based authentication
-- [x] Password hashing (bcrypt)
-- [x] Email verification
-- [x] Password reset with tokens
-- [x] Token expiration
-- [x] Secure password requirements
-
-### Authorization
-
-- [x] Role-based access control (RBAC)
-- [x] Permission-based guards
-- [x] Middleware authentication
-- [x] Protected routes
-
-### Input Validation
-
-- [x] Zod schema validation
-- [x] OpenAPI integration
-- [x] Detailed error messages
-- [x] Type safety
-
-### Rate Limiting
-
-- [x] Request rate limiting
-- [x] Redis-backed rate limiter
-- [x] Per-endpoint limits
-- [x] Rate limit headers
-
-### Security Headers
-
-- [x] CORS configuration
-- [x] Security headers
-- [x] HTTPS enforcement
-- [x] Content type validation
-
-### Monitoring
-
-- [x] Structured logging (Pino)
-- [x] Request ID tracking
-- [x] Performance monitoring
-- [x] Error tracking
-
----
-
-## Support & Contact
-
-For security issues or vulnerabilities:
-
-- **Do not** open public issues
-- Contact: security@example.com
-- Use responsible disclosure practices
-- Allow reasonable time for fixes
-
-For general security questions:
-
-- Review this documentation
-- Check the API documentation
-- Contact: support@example.com
-
----
-
-**Last Updated**: February 8, 2026  
-**Version**: 1.0.0
+- [ ] Strong, distinct `JWT_SECRET` and `JWT_REFRESH_SECRET`; `APP_KEY` changed.
+- [ ] `ENABLE_API_DOCS` unset or `false`.
+- [ ] `ALLOWED_HOST` set to real origins.
+- [ ] Seeded accounts removed or their passwords changed.
+- [ ] Redis and Postgres not reachable from the internet.
+- [ ] TLS terminated in front of the app; a shared rate limit at the proxy.

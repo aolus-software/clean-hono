@@ -1,59 +1,53 @@
-import { db, rolesTable, user_rolesTable, usersTable } from "@database";
+import { db } from "@database/postgres/client";
+import {
+	rolesTable,
+	user_rolesTable,
+	usersTable,
+	UserStatus,
+} from "@database/postgres/schema";
 import { Hash } from "@utils";
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 
-export const UserSeeder = async () => {
-	await db.transaction(async (tx) => {
-		await tx.insert(usersTable).values({
-			name: "superuser",
-			email: "superuser@example.com",
-			email_verified_at: new Date(),
-			password: await Hash.generateHash("password"),
+import { SEEDED_ROLES } from "./rbac.seed";
+
+const SEED_PASSWORD = "S3crEtP4ssw0rd!";
+
+/**
+ * One verified, active account per seeded role (`<role>@example.com`). An
+ * existing live account is left untouched, so a rerun never resets a
+ * password an operator has changed.
+ */
+export const UserSeeder = async (): Promise<void> => {
+	for (const roleName of SEEDED_ROLES) {
+		const email = `${roleName}@example.com`;
+		const existing = await db.query.users.findFirst({
+			where: and(eq(usersTable.email, email), isNull(usersTable.deleted_at)),
+			columns: { id: true },
 		});
+		if (existing) continue;
 
-		await tx.insert(usersTable).values({
-			name: "admin",
-			email: "admin@example.com",
-			email_verified_at: new Date(),
-			password: await Hash.generateHash("password"),
+		const role = await db.query.roles.findFirst({
+			where: eq(rolesTable.name, roleName),
+			columns: { id: true },
 		});
-
-		// get created user
-		const superUser = await tx
-			.select()
-			.from(usersTable)
-			.where(eq(usersTable.name, "superuser"))
-			.limit(1);
-		const admin = await tx
-			.select()
-			.from(usersTable)
-			.where(eq(usersTable.name, "admin"))
-			.limit(1);
-
-		// assign role
-		const superUserRole = await tx
-			.select()
-			.from(rolesTable)
-			.where(eq(rolesTable.name, "superuser"))
-			.limit(1);
-		const adminRole = await tx
-			.select()
-			.from(rolesTable)
-			.where(eq(rolesTable.name, "admin"))
-			.limit(1);
-
-		if (superUserRole[0] && superUser[0]) {
-			await tx.insert(user_rolesTable).values({
-				userId: superUser[0].id,
-				roleId: superUserRole[0].id,
-			});
+		if (!role) {
+			throw new Error(`Role ${roleName} is missing; run the RBAC seeder first`);
 		}
 
-		if (adminRole[0] && admin[0]) {
-			await tx.insert(user_rolesTable).values({
-				userId: admin[0].id,
-				roleId: adminRole[0].id,
-			});
-		}
-	});
+		await db.transaction(async (tx) => {
+			const [user] = await tx
+				.insert(usersTable)
+				.values({
+					name: roleName,
+					email,
+					password: await Hash.generateHash(SEED_PASSWORD),
+					status: UserStatus.ACTIVE,
+					email_verified_at: new Date(),
+				})
+				.returning({ id: usersTable.id });
+			await tx
+				.insert(user_rolesTable)
+				.values({ userId: user.id, roleId: role.id });
+		});
+	}
 };
