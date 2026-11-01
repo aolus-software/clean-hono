@@ -1,122 +1,169 @@
 # Copilot Instructions
 
+These mirror `CLAUDE.md` and `.claude/rules/`. When they disagree, the rule file wins.
+
 ## Code Style and Quality
 
 ### Type Safety
 
-- Always use strict TypeScript types
-- Never use `any` type - use proper types or `unknown` with type guards
-- Follow the ESLint rules configured in the project:
-  - `@typescript-eslint/no-explicit-any`: error
-  - `@typescript-eslint/no-floating-promises`: error
-  - `no-console`: warn
+- Strict TypeScript. Never use `any`; use proper types or `unknown` with narrowing.
+- ESLint enforces `@typescript-eslint/no-explicit-any` (error), `@typescript-eslint/no-floating-promises` (error), and `no-console`.
+- Every promise is `await`ed or explicitly `void`ed.
 
 ### Comments
 
-- Do not add comments on every line of code
-- Add comments only before function blocks or complex logic blocks
-- For complex conditions (e.g., if statements with multiple checks), add a comment before the condition, not inside or on every line
-- Keep comments concise and meaningful
+- No line-by-line comments. One block comment above a block whose _why_ is not obvious.
+- Docblocks only on exported helpers that need clarification.
+
+Good:
+
+```typescript
+/* Verify the password before looking at account state, and answer an unknown
+   address and a wrong password with the same message, so an unauthenticated
+   caller cannot tell a registered address from an unknown one. */
+const isPasswordValid = await Hash.compareHash(
+	password,
+	user?.password ?? TIMING_EQUALISER_HASH,
+);
+```
+
+Bad:
+
+```typescript
+// Find user
+const user = await UserRepository().findByEmail(email);
+// Check password
+const isPasswordValid = await Hash.compareHash(password, user.password);
+```
 
 ### Communication
 
-- Do not use icons or emojis in any files
-- When responding to questions, provide direct answers without examples, markdown, or documentation unless explicitly requested
-- Focus on implementation rather than explanation
+- No icons or emojis in any file.
 
 ## Project Structure
 
-### Backend Framework
+- Hono 4 with `@hono/zod-openapi` (routes, validation, and the OpenAPI spec come from `createRoute`).
+- Drizzle ORM over a `pg` pool; schema in `src/libs/database/postgres/schema/`, migrations in `src/libs/database/postgres/migrations/` (`drizzle.config.ts`).
+- PostgreSQL, Redis (Bun native `RedisClient`) for cache, BullMQ for queued mail, optional ClickHouse.
+- Bun runtime. Cluster mode (`APP_CLUSTER_MODE`) spawns Bun workers that share the port.
 
-- This is a Hono backend API project
-- Uses Zod OpenAPI for schema validation and API documentation
-- Routes are defined using `@hono/zod-openapi`
+## Architecture
 
-### Database
+### Request flow
 
-- PostgreSQL as the primary database
-- Drizzle ORM for database operations
-- Schema files are in `src/libs/database/postgres/schema/`
-- Migrations are in `src/libs/database/postgres/migrations/`
-- Repository pattern for database access
-
-### Additional Technologies
-
-- ClickHouse for analytics (optional)
-- Redis for caching and rate limiting
-- BullMQ for background job processing
-- Bun as the JavaScript runtime
-
-## Architecture Patterns
-
-### Clean Architecture
-
-- Follow the clean architecture pattern
-- Services contain business logic
-- Repositories handle data access
-- Routes define HTTP endpoints
-- Keep dependencies pointing inward
-
-### Dependency Injection
-
-- Use the container pattern in `src/libs/hono/core/container.ts`
-- Register services and repositories in the container
-- Use DI middleware to inject dependencies
-
-### Error Handling
-
-- Use custom error classes from `src/libs/hono/errors/`
-- Handle errors with the centralized error handler
-- Return appropriate HTTP status codes
-
-## Code Organization
+`routes.ts` (HTTP only) → service class (business rules, existence and uniqueness checks, transactions, cache invalidation, queue dispatch) → repository factory (Drizzle queries only).
 
 ### Modules
 
-- Each module should have its own directory under `src/modules/`
-- Module structure:
-  - `routes.ts` - Route definitions
-  - `schema.ts` - Zod schemas
-  - `service.interface.ts` - Service interface
-  - `service.ts` - Service implementation
+```
+src/modules/<name>/
+├── routes.ts             # OpenAPIHono<Env>({ defaultHook }), createRoute + .openapi(route, handler)
+├── schema.ts             # Zod schemas with .openapi(...) metadata
+├── service.interface.ts  # I<Name>Service
+└── service.ts            # class <Name>Service implements I<Name>Service
+```
 
-### Guards
+### Routes and guards
 
-- Use permission and role guards for authorization
-- Guards are in `src/libs/hono/guards/`
-- Apply guards to protected routes
+Guards are attached in the route definition, so they run before validation and the handler:
 
-### Middlewares
+```typescript
+const UserListRoute = createRoute({
+	method: "get",
+	path: "",
+	tags: ["Settings/Users"],
+	summary: "List users",
+	description: "Requires the 'user list' permission.",
+	security: [{ Bearer: [] }],
+	middleware: [AuthMiddleware, permissionGuard(["user list"])] as const,
+	request: { query: UserQuerySchema },
+	responses: {/* every status code the route can return */},
+});
+```
 
-- Auth middleware for authentication
-- Request ID middleware for tracing
-- Performance middleware for monitoring
-- Custom middlewares should follow the Hono middleware pattern
+- Permission strings are `<group> <action>` and must exist in the seeder.
+- `permissionGuard` and `roleGuard` are AND across their list; `superuser` bypasses both.
+- Privilege-granting routes (admin password reset, select-options) use `roleGuard(["superuser"])`.
+- Never register a guard with `.use()` after the handler; Hono runs matches in registration order.
 
-## Best Practices
+### Dependency Injection
 
-### Security
+- Services are registered in `src/bootstrap.ts`, injected by `diMiddleware`, typed in `Variables` (`src/libs/types/hono/app.types.ts`), and read in handlers with `c.get("userService")`.
 
-- Validate all inputs with Zod schemas
-- Use strong password requirements (defined in `src/libs/default/strong-password.ts`)
-- Implement rate limiting for sensitive endpoints
-- Sanitize file uploads
+### Repositories
 
-### Performance
+```typescript
+export function UserRepository(tx?: DbTransaction) {
+	const dbClient = tx || db;
+	return {
+		async findLiveByEmail(
+			email: string,
+			excludeId?: string,
+		): Promise<{ id: string } | null> {
+			const user = await dbClient.query.users.findFirst({
+				where: and(
+					eq(usersTable.email, email),
+					isNull(usersTable.deleted_at),
+					excludeId ? ne(usersTable.id, excludeId) : undefined,
+				),
+				columns: { id: true },
+			});
+			return user ?? null;
+		},
+	};
+}
+```
 
-- Use caching where appropriate
-- Implement pagination for list endpoints
-- Use database indexes for frequently queried fields
-- Monitor performance with the performance middleware
+- Factory invoked per call; accepts an optional transaction client.
+- Reads return `null` when a row is missing; the service throws `NotFoundError`.
+- Every user read includes `isNull(usersTable.deleted_at)`.
+- Sort keys and filter keys are exported allow-lists (`userSortableFields`, `userFilterableFields`); never pass a raw query value to `orderBy` or `where`.
 
-### Testing
+### Responses and errors
 
-- Write tests for business logic
-- Test edge cases and error scenarios
-- Use meaningful test descriptions
+- Success: `{ status, success: true, message, data }`; lists put `{ data, meta: { page, limit, totalCount } }` inside `data`.
+- 400/422: `{ status, success: false, message, errors: [{ field, message }] }`.
+- 401/403/404/500: `{ status, success: false, message, data: null }`.
+- Throw error classes from `@errors` (`BadRequestError`, `UnauthorizedError`, `ForbiddenError`, `NotFoundError`, `UnprocessableEntityError`); never build an error body in a handler.
+- Uniqueness conflicts are 422. Login and token failures are 400. Unknown filter keys are 400.
+- Response fields are camelCase (`createdAt`, `updatedAt`, `isAssigned`); request id arrays are `roleIds` / `permissionIds`.
 
-### Git Commits
+### Caching
 
-- Write clear, descriptive commit messages
-- Follow conventional commits format
-- Keep commits atomic and focused
+- `UserInformation` is cached at `UserInformationCacheKey(id)` for 3600 s by `AuthMiddleware`.
+- Any write that changes a user's profile, status, roles, password, or deletion, or a role's or permission's grants, deletes the affected cache entries.
+
+### Queues
+
+- Enqueue mail with `sendEmailQueue.add(...)` from a service, after the transaction commits.
+
+## Drizzle Conventions
+
+- snake_case tables and columns; repositories map them to camelCase response fields; enum values lowercase.
+- Change the schema, then `make db-generate` and commit the SQL file and its `meta/` snapshot.
+- Never hand-edit an applied migration.
+- Never open another `Pool` or `drizzle(...)` client outside `src/libs/database/postgres/client.ts`.
+
+## Configuration
+
+- Env is validated with envalid in `src/libs/config/env.ts` and read only through `@config`.
+- Never read `process.env` elsewhere. New vars go in `env.ts`, `.env.example`, and `docs/CONFIGURATION.md`.
+
+## Security
+
+- Validate every input with Zod; `:id` params are uuids.
+- Strong passwords use `StrongPassword` from `@default`.
+- Verification and reset tokens are random, single use (`usedAt`), and expire after 1 hour.
+- Never log passwords, tokens, or secrets.
+
+## i18n
+
+- No hardcoded user-facing strings: add keys to both `src/libs/i18n/locales/en.json` and `id.json`, then run `bun run i18n:keys`.
+
+## Testing
+
+- There is no test runner configured yet. Do not add test commands to docs or CI without adding the runner and tests.
+
+## Git Commits
+
+- Conventional Commits (`feat:`, `fix:`, `refactor:`, `docs:`, `chore:`, `db:`), imperative, under 72 characters.

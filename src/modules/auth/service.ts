@@ -1,66 +1,89 @@
 import {
-	UserRepository,
 	db,
-	email_verificationsTable,
-	password_reset_tokensTable,
-	usersTable,
+	EmailVerificationRepository,
+	PasswordResetRepository,
+	UserRepository,
+	UserStatus,
 } from "@database";
-import { JWTToolkit, Hash, StrToolkit } from "@utils";
-import { AppConfig } from "@config";
-import { eq } from "drizzle-orm";
+import {
+	BadRequestError,
+	UnauthorizedError,
+	UnprocessableEntityError,
+} from "@errors";
+import { t } from "@i18n";
+import { AuthMailService } from "@mail/auth-mail.service";
+import {
+	currentRefreshTokenId,
+	forgetUserInformation,
+	revokeSessions,
+	storeRefreshTokenId,
+} from "@cache";
+import { Hash, JWTToolkit, logger } from "@utils";
+
+import type { LoginData, TokenPair } from "./schema";
 import type { IAuthService } from "./service.interface";
-import { UserInformation } from "@types";
-import { UnprocessableEntityError } from "@errors";
-import { verificationTokenLifetime } from "@default";
-import { sendEmailQueue } from "@bull";
-import { ForgotPasswordRepository } from "@database";
-import { t, getCurrentLocale } from "@i18n";
+
+const TIMING_EQUALISER_HASH =
+	"$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy";
 
 export class AuthService implements IAuthService {
-	async login(
-		email: string,
-		password: string,
-	): Promise<{
-		user: UserInformation;
-		token: string;
-	}> {
+	/**
+	 * The password is checked before account state, and an unknown address
+	 * gets the same answer as a wrong password (compared against a dummy hash
+	 * so both paths take as long), so a caller cannot probe which addresses
+	 * are registered.
+	 */
+	async login(email: string, password: string): Promise<LoginData> {
 		const user = await UserRepository().findByEmail(email);
+		const isPasswordValid = await Hash.compareHash(
+			password,
+			user?.password ?? TIMING_EQUALISER_HASH,
+		);
+
+		if (!user || !isPasswordValid) {
+			throw new BadRequestError(t("auth.validationError"), [
+				{ field: "email", message: t("auth.invalidCredentials") },
+			]);
+		}
+		if (user.emailVerifiedAt === null) {
+			throw new BadRequestError(t("auth.validationError"), [
+				{ field: "email", message: t("auth.emailNotVerified") },
+			]);
+		}
+		if (user.status !== UserStatus.ACTIVE) {
+			throw new BadRequestError(t("auth.validationError"), [
+				{ field: "email", message: t("auth.accountInactive") },
+			]);
+		}
+
+		const information = await UserRepository().findUserInformation(user.id);
+		if (!information) {
+			throw new BadRequestError(t("auth.validationError"), [
+				{ field: "email", message: t("auth.accountInactive") },
+			]);
+		}
+		await forgetUserInformation([user.id]);
+
+		logger.info({ userId: user.id }, "User logged in");
+		return { user: information, ...(await this.issueSession(user.id)) };
+	}
+
+	async refresh(refreshToken: string): Promise<TokenPair> {
+		const payload = await JWTToolkit.verify(refreshToken, "refresh");
+		if (!payload?.jti) {
+			throw new UnauthorizedError(t("auth.invalidRefreshToken"));
+		}
+		if ((await currentRefreshTokenId(payload.id)) !== payload.jti) {
+			throw new UnauthorizedError(t("auth.invalidRefreshToken"));
+		}
+
+		const user = await UserRepository().findUserInformation(payload.id);
 		if (!user) {
-			throw new UnprocessableEntityError(t("auth.invalidCredentials"), [
-				{
-					email: [t("auth.invalidCredentials")],
-				},
-			]);
+			await revokeSessions(payload.id);
+			throw new UnauthorizedError(t("auth.invalidRefreshToken"));
 		}
 
-		if (!user.email_verified_at || user.email_verified_at === null) {
-			throw new UnprocessableEntityError(t("auth.emailNotVerified"), [
-				{
-					email: [t("auth.emailNotVerified")],
-				},
-			]);
-		}
-
-		if (user.status !== "active") {
-			throw new UnprocessableEntityError(t("auth.accountInactive"), [
-				{
-					email: [t("auth.accountInactive")],
-				},
-			]);
-		}
-
-		const isPasswordValid = await Hash.compareHash(password, user.password);
-		if (!isPasswordValid) {
-			throw new UnprocessableEntityError(t("auth.invalidCredentials"), [
-				{
-					password: [t("auth.invalidCredentials")],
-				},
-			]);
-		}
-
-		const userInformation = await UserRepository().UserInformation(user.id);
-		const token = await new JWTToolkit().sign({ userId: user.id });
-		return { user: userInformation, token };
+		return this.issueSession(user.id);
 	}
 
 	async register(data: {
@@ -68,172 +91,85 @@ export class AuthService implements IAuthService {
 		email: string;
 		password: string;
 	}): Promise<void> {
-		const user = await UserRepository().findByEmail(data.email);
-		if (user) {
-			throw new UnprocessableEntityError(t("auth.userAlreadyExists"), [
-				{
-					email: [t("auth.userAlreadyExists")],
-				},
+		const existing = await UserRepository().findLiveByEmail(data.email);
+		if (existing) {
+			throw new UnprocessableEntityError(t("auth.validationError"), [
+				{ field: "email", message: t("auth.userAlreadyExists") },
 			]);
 		}
 
-		const hashedPassword = await Hash.generateHash(data.password);
-		await db.transaction(async (trx) => {
-			const newUser = await trx
-				.insert(usersTable)
-				.values({
-					name: data.name,
-					email: data.email,
-					password: hashedPassword,
-					status: "active",
-				})
-				.returning();
-
-			const token = StrToolkit.random(255);
-			await trx.insert(email_verificationsTable).values({
-				token,
-				user_id: newUser[0].id,
-				expired_at: verificationTokenLifetime,
-			});
-
-			await sendEmailQueue.add("send-email", {
-				subject: t("mail.subject.verification"),
-				to: data.email,
-				template: "/auth/email-verification",
-				lang: getCurrentLocale(),
-				variables: {
-					user_id: newUser[0].id,
-					user_name: newUser[0].name,
-					user_email: newUser[0].email,
-					verification_url: `${AppConfig.CLIENT_URL}/auth/verify-email?token=${token}`,
-				},
-			});
+		const user = await UserRepository().create({
+			name: data.name,
+			email: data.email,
+			password: await Hash.generateHash(data.password),
+			status: UserStatus.ACTIVE,
+			remark: null,
 		});
+
+		await AuthMailService.sendVerificationEmail(user);
 	}
 
-	async resendVerification(data: { email: string }): Promise<void> {
-		const user = await UserRepository().findByEmail(data.email);
+	async resendVerification(email: string): Promise<void> {
+		const user = await UserRepository().findByEmail(email);
+		if (!user || user.emailVerifiedAt !== null) {
+			return;
+		}
+		await AuthMailService.sendVerificationEmail(user);
+	}
+
+	async verifyEmail(token: string): Promise<void> {
+		const record = await EmailVerificationRepository().findByToken(token);
+		if (!record || record.usedAt !== null || record.expiresAt < new Date()) {
+			throw new BadRequestError(t("auth.validationError"), [
+				{ field: "token", message: t("auth.invalidVerificationToken") },
+			]);
+		}
+
+		await db.transaction(async (tx) => {
+			await UserRepository(tx).markEmailVerified(record.userId);
+			await EmailVerificationRepository(tx).markAllUsed(record.userId);
+		});
+
+		logger.info({ userId: record.userId }, "Email verified");
+	}
+
+	async forgotPassword(email: string): Promise<void> {
+		const user = await UserRepository().findByEmail(email);
 		if (!user) {
 			return;
 		}
+		await AuthMailService.sendResetPasswordEmail(user);
+	}
 
-		if (user.email_verified_at !== null) {
-			throw new UnprocessableEntityError(t("auth.emailAlreadyVerified"), [
-				{
-					email: [t("auth.emailAlreadyVerified")],
-				},
+	async resetPassword(token: string, newPassword: string): Promise<void> {
+		const record = await PasswordResetRepository().findByToken(token);
+		if (!record || record.usedAt !== null || record.expiresAt < new Date()) {
+			throw new BadRequestError(t("auth.validationError"), [
+				{ field: "token", message: t("auth.invalidResetPasswordToken") },
 			]);
 		}
 
-		const token = StrToolkit.random(255);
-		await db.transaction(async (trx) => {
-			await trx.insert(email_verificationsTable).values({
-				token,
-				user_id: user.id,
-				expired_at: verificationTokenLifetime,
-			});
-
-			await sendEmailQueue.add("send-email", {
-				subject: t("mail.subject.verification"),
-				to: data.email,
-				template: "/auth/email-verification",
-				lang: getCurrentLocale(),
-				variables: {
-					user_id: user.id,
-					user_name: user.name,
-					user_email: user.email,
-					verification_url: `${AppConfig.CLIENT_URL}/auth/verify-email?token=${token}`,
-				},
-			});
+		const hashedPassword = await Hash.generateHash(newPassword);
+		await db.transaction(async (tx) => {
+			await UserRepository(tx).updatePassword(record.userId, hashedPassword);
+			await PasswordResetRepository(tx).markAllUsed(record.userId);
 		});
+		await revokeSessions(record.userId);
+
+		logger.info({ userId: record.userId }, "Password reset");
 	}
 
-	async verifyEmail(data: { token: string }): Promise<void> {
-		const verificationRecord = await db
-			.select()
-			.from(email_verificationsTable)
-			.where(eq(email_verificationsTable.token, data.token))
-			.limit(1)
-			.then((res) => res[0]);
-
-		if (!verificationRecord) {
-			throw new UnprocessableEntityError(t("auth.invalidVerificationToken"), [
-				{
-					token: [t("auth.invalidVerificationToken")],
-				},
-			]);
-		}
-
-		await db.transaction(async (trx) => {
-			await trx
-				.update(usersTable)
-				.set({ email_verified_at: new Date() })
-				.where(eq(usersTable.id, verificationRecord.user_id));
-
-			await trx
-				.delete(email_verificationsTable)
-				.where(
-					eq(email_verificationsTable.user_id, verificationRecord.user_id),
-				);
-		});
-	}
-
-	async forgotPassword(data: { email: string }): Promise<void> {
-		const user = await UserRepository().db.query.users.findFirst({
-			where: eq(usersTable.email, data.email),
-		});
-		if (!user) {
-			return;
-		}
-
-		const token = StrToolkit.random(255);
-		await ForgotPasswordRepository().create({
-			user_id: user.id,
-			token,
-		});
-
-		await sendEmailQueue.add("send-email", {
-			subject: t("mail.subject.resetPassword"),
-			to: data.email,
-			template: "/auth/forgot-password",
-			lang: getCurrentLocale(),
-			variables: {
-				user_id: user.id,
-				user_name: user.name,
-				user_email: user.email,
-				reset_password_url: `${AppConfig.CLIENT_URL}/auth/reset-password?token=${token}`,
-			},
-		});
-	}
-
-	async resetPassword(data: {
-		token: string;
-		password: string;
-	}): Promise<void> {
-		const forgotPasswordRecord = await db.query.password_reset_tokens.findFirst(
-			{
-				where: eq(password_reset_tokensTable.token, data.token),
-			},
+	/**
+	 * Issues an access/refresh pair and stores the refresh token's id, which
+	 * replaces the previous one: only the newest refresh token can be used.
+	 */
+	private async issueSession(userId: string): Promise<TokenPair> {
+		const pair = await JWTToolkit.issuePair(userId);
+		await storeRefreshTokenId(
+			userId,
+			pair.refreshTokenId,
+			pair.refreshExpiresInSeconds,
 		);
-		if (!forgotPasswordRecord) {
-			throw new UnprocessableEntityError(t("auth.invalidResetPasswordToken"), [
-				{
-					token: [t("auth.invalidResetPasswordToken")],
-				},
-			]);
-		}
-
-		await db.transaction(async (trx) => {
-			await trx
-				.update(usersTable)
-				.set({ password: data.password })
-				.where(eq(usersTable.id, forgotPasswordRecord.user_id));
-
-			await trx
-				.delete(password_reset_tokensTable)
-				.where(
-					eq(password_reset_tokensTable.user_id, forgotPasswordRecord.user_id),
-				);
-		});
+		return { accessToken: pair.accessToken, refreshToken: pair.refreshToken };
 	}
 }

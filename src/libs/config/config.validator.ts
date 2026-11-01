@@ -131,39 +131,6 @@ export const validateAppConfig = (
 		);
 	}
 
-	if (!config.APP_SECRET || config.APP_SECRET.length < 32) {
-		errors.push(
-			createError(
-				"APP_SECRET",
-				"***",
-				"string with at least 32 characters",
-				"APP_SECRET must be at least 32 characters long",
-			),
-		);
-	}
-
-	if (!config.APP_JWT_SECRET || config.APP_JWT_SECRET.length < 32) {
-		errors.push(
-			createError(
-				"APP_JWT_SECRET",
-				"***",
-				"string with at least 32 characters",
-				"JWT secret must be at least 32 characters long",
-			),
-		);
-	}
-
-	if (config.APP_JWT_EXPIRES_IN <= 0) {
-		errors.push(
-			createError(
-				"APP_JWT_EXPIRES_IN",
-				config.APP_JWT_EXPIRES_IN,
-				"positive number",
-				"JWT expiration must be positive",
-			),
-		);
-	}
-
 	if (!["info", "warn", "debug", "error"].includes(config.LOG_LEVEL)) {
 		errors.push(
 			createError(

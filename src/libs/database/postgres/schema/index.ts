@@ -16,7 +16,7 @@ import {
 	user_rolesRelations,
 	user_rolesTable,
 } from "./rbac";
-import { usersRelations, usersTable, userStatusEnum } from "./user";
+import { usersRelations, usersTable, UserStatus, userStatusEnum } from "./user";
 
 // Schema object for Drizzle
 export const schema = {
@@ -61,7 +61,7 @@ export {
 	password_reset_tokensRelations,
 };
 
-export { userStatusEnum };
+export { UserStatus, userStatusEnum };
 export type { UserStatusEnum } from "./user";
 
 // Export types from rbac

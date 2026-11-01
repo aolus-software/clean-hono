@@ -1,9 +1,10 @@
-import { AppConfig } from "@config";
 import * as CryptoJS from "crypto-js";
+import { env } from "@config";
 
 export class EncryptionToolkit {
-	private static readonly secretKey =
-		AppConfig.APP_SECRET || "default-secret-key";
+	private static get secretKey(): string {
+		return env.APP_KEY;
+	}
 
 	static encrypt(text: string): string {
 		return CryptoJS.AES.encrypt(text, this.secretKey).toString();

@@ -17,42 +17,20 @@ import { registerException } from "@hono-libs/errors/error.handler";
 
 const app = new Hono<Env>();
 
-// Bootstrap services
 bootstrapServices();
 
-// Core Middleware =========================================
-// Request ID middleware - first to ensure all requests have an ID
 app.use("*", requestIdMiddleware);
-
-// Logger middleware
 app.use("*", loggerMiddleware);
-
-// Performance logging
 app.use("*", performanceMiddleware);
-
-// Locale detection from Accept-Language header
 app.use("*", localeMiddleware);
-
-// Dependency injection - bind services to context
 app.use("*", diMiddleware);
-
-// Security Middleware =========================================
-// Body size limits
 app.use("*", bodyLimitMiddleware);
-
-// CORS configuration
 app.use("*", corsMiddleware);
+app.use("*", securityHeadersMiddleware);
+app.use("*", rateLimiterMiddleware);
 
-// Security headers (CSP, HSTS, etc.)
-app.use(securityHeadersMiddleware);
-
-// Rate limiting
-app.use(rateLimiterMiddleware);
-
-// Error handling=====================================================
 registerException(app);
 
-// Routes =========================================
 app.route("/", bootstrap);
 
 export default app;

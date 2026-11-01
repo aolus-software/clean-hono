@@ -1,639 +1,171 @@
-# API Documentation Guide
+# API Documentation
 
-## Introduction
+## Base URL and content type
 
-This guide explains how to work with the Clean Hono API, understand the schema documentation, and integrate with the OpenAPI specification.
+- Local: `http://localhost:3000` (`APP_PORT`). No global prefix and no version segment.
+- Requests and responses are `application/json`.
+- Send `Accept-Language: id` for Indonesian messages; the default is English.
 
-## Table of Contents
+## Interactive documentation
 
-1. [Getting Started](#getting-started)
-2. [OpenAPI/Scalar Documentation](#openapiscalar-documentation)
-3. [Understanding Schemas](#understanding-schemas)
-4. [Request/Response Examples](#requestresponse-examples)
-5. [Validation Rules](#validation-rules)
-6. [Error Handling](#error-handling)
-7. [Authentication](#authentication)
+When `ENABLE_API_DOCS=true`:
 
----
+- `GET /docs` — Scalar UI
+- `GET /docs/openapi.json` — OpenAPI 3 spec, generated from the route definitions
 
-## Getting Started
-
-### Base URL
-
-**Development:**
-
-```
-http://localhost:3000
-```
-
-**Production:**
-
-```
-https://api.example.com
-```
-
-### Content Type
-
-All requests and responses use JSON:
-
-```
-Content-Type: application/json
-```
-
-### API Versioning
-
-The API uses URL-based versioning:
-
-```
-/api/v1/auth/login
-```
-
----
-
-## OpenAPI/Scalar Documentation
-
-### Interactive Documentation
-
-The API provides interactive documentation via Scalar UI:
-
-**Access the docs:**
-
-```
-http://localhost:3000/docs
-```
-
-**Features:**
-
-- Browse all endpoints
-- View request/response schemas
-- Try endpoints directly
-- See validation rules
-- View examples
-
-### OpenAPI Specification
-
-Download the OpenAPI spec:
-
-```
-GET /openapi.json
-```
-
-**Use cases:**
-
-- Generate client SDKs
-- Import into Postman/Insomnia
-- Generate documentation
-- Validate API contracts
-
----
-
-## Understanding Schemas
-
-### Schema Structure
-
-All schemas include comprehensive metadata:
-
-```typescript
-export const EmailSchema = z
-	.string()
-	.email("Must be a valid email address")
-	.max(255, "Email must not exceed 255 characters")
-	.openapi({
-		description: "Valid email address",
-		example: "user@example.com",
-	});
-```
-
-**Components:**
-
-1. **Type**: Base data type (string, number, object, etc.)
-2. **Validation**: Rules like `.email()`, `.min()`, `.max()`
-3. **Error Messages**: Custom validation error messages
-4. **OpenAPI Metadata**: Description and examples for documentation
-
-### Common Schema Patterns
-
-#### Email Field
-
-```json
-{
-	"email": "user@example.com"
-}
-```
-
-- **Type**: string
-- **Validation**: Valid email format, max 255 characters
-- **Example**: "user@example.com"
-
-#### Password Field (Basic)
-
-```json
-{
-	"password": "MyPassword123!"
-}
-```
-
-- **Type**: string
-- **Validation**: Min 8 chars, max 128 chars
-- **Example**: "MyPassword123!"
-
-#### Password Field (Strong)
-
-```json
-{
-	"password": "SecurePass123!"
-}
-```
-
-- **Type**: string
-- **Validation**:
-  - Min 8 characters
-  - At least one uppercase letter
-  - At least one lowercase letter
-  - At least one number
-  - At least one special character
-- **Example**: "SecurePass123!"
-
-#### UUID Field
-
-```json
-{
-	"id": "550e8400-e29b-41d4-a716-446655440000"
-}
-```
-
-- **Type**: string
-- **Validation**: Valid UUID v4 format
-- **Example**: "550e8400-e29b-41d4-a716-446655440000"
-
-#### Pagination
-
-```json
-{
-	"page": 1,
-	"limit": 10
-}
-```
-
-- **page**: Positive integer (default: 1)
-- **limit**: 1-100 (default: 10)
-
-#### Sorting
-
-```json
-{
-	"sortBy": "createdAt",
-	"sortOrder": "desc"
-}
-```
-
-- **sortBy**: Field name (optional)
-- **sortOrder**: "asc" or "desc" (default: "asc")
-
----
-
-## Request/Response Examples
-
-### Authentication Endpoints
-
-#### Register User
-
-**Request:**
-
-```http
-POST /auth/register
-Content-Type: application/json
-
-{
-  "name": "John Doe",
-  "email": "john@example.com",
-  "password": "SecurePass123!"
-}
-```
-
-**Success Response (201):**
-
-```json
-{
-	"success": true,
-	"message": "Registration successful. Please check your email to verify your account.",
-	"data": null
-}
-```
-
-**Validation Error (422):**
-
-```json
-{
-	"success": false,
-	"message": "Validation Error",
-	"data": null,
-	"errors": {
-		"email": ["Email is already in use"],
-		"password": [
-			"Password must contain at least 8 characters, one uppercase, one lowercase, one number and one special character"
-		]
-	}
-}
-```
-
-#### Login
-
-**Request:**
-
-```http
-POST /auth/login
-Content-Type: application/json
-
-{
-  "email": "john@example.com",
-  "password": "SecurePass123!"
-}
-```
-
-**Success Response (200):**
-
-```json
-{
-	"success": true,
-	"message": "Login successful",
-	"data": {
-		"user": {
-			"id": "550e8400-e29b-41d4-a716-446655440000",
-			"name": "John Doe",
-			"email": "john@example.com",
-			"emailVerifiedAt": "2024-01-15T10:30:00Z",
-			"role": {
-				"id": "role-uuid",
-				"name": "user"
-			},
-			"createdAt": "2024-01-15T10:30:00Z",
-			"updatedAt": "2024-01-15T10:30:00Z"
-		},
-		"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-	}
-}
-```
-
-**Error Response (401):**
-
-```json
-{
-	"success": false,
-	"message": "Invalid credentials",
-	"data": null,
-	"errors": {
-		"email": ["Email not found"],
-		"password": ["Incorrect password"]
-	}
-}
-```
-
-### Profile Endpoints
-
-#### Get Profile
-
-**Request:**
-
-```http
-GET /profile
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
-
-**Success Response (200):**
-
-```json
-{
-	"success": true,
-	"message": "User profile retrieved successfully",
-	"data": {
-		"id": "550e8400-e29b-41d4-a716-446655440000",
-		"name": "John Doe",
-		"email": "john@example.com",
-		"emailVerifiedAt": "2024-01-15T10:30:00Z",
-		"role": {
-			"id": "role-uuid",
-			"name": "user"
-		},
-		"remarks": "Software developer",
-		"createdAt": "2024-01-15T10:30:00Z",
-		"updatedAt": "2024-01-15T10:30:00Z"
-	}
-}
-```
-
-#### Update Profile
-
-**Request:**
-
-```http
-PUT /profile
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-Content-Type: application/json
-
-{
-  "name": "John Smith",
-  "email": "john.smith@example.com",
-  "remarks": "Senior Software Engineer"
-}
-```
-
-**Success Response (200):**
-
-```json
-{
-	"success": true,
-	"message": "User profile updated successfully",
-	"data": {
-		"id": "550e8400-e29b-41d4-a716-446655440000",
-		"name": "John Smith",
-		"email": "john.smith@example.com",
-		"remarks": "Senior Software Engineer",
-		"emailVerifiedAt": "2024-01-15T10:30:00Z",
-		"role": {
-			"id": "role-uuid",
-			"name": "user"
-		},
-		"createdAt": "2024-01-15T10:30:00Z",
-		"updatedAt": "2024-01-16T14:20:00Z"
-	}
-}
-```
-
-#### Change Password
-
-**Request:**
-
-```http
-PUT /profile/password
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-Content-Type: application/json
-
-{
-  "current_password": "OldPass123!",
-  "new_password": "NewSecure123!"
-}
-```
-
-**Success Response (200):**
-
-```json
-{
-	"success": true,
-	"message": "User password updated successfully",
-	"data": {
-		"message": "Password updated successfully"
-	}
-}
-```
-
----
-
-## Validation Rules
-
-### Field-Level Validation
-
-Each field has specific validation rules documented in the schema:
-
-| Field               | Rules                             | Example               |
-| ------------------- | --------------------------------- | --------------------- |
-| **email**           | Valid email format, max 255 chars | user@example.com      |
-| **password**        | Min 8 chars, max 128 chars        | MyPass123!            |
-| **strong_password** | Min 8 chars + complexity          | Secure123!            |
-| **name**            | Min 1 char, max 255 chars         | John Doe              |
-| **uuid**            | Valid UUID v4 format              | 550e8400-e29b-41d4... |
-| **token**           | Min 10 chars                      | eyJhbGciOiJI...       |
-| **remarks**         | Optional, max 500 chars           | Additional notes      |
-
-### Object-Level Validation
-
-Some schemas have cross-field validation:
-
-**Password Confirmation:**
-
-```typescript
-// passwords must match
-{
-  "password": "SecurePass123!",
-  "password_confirmation": "SecurePass123!"
-}
-```
-
-**Password Change:**
-
-```typescript
-// new password must differ from current
-{
-  "current_password": "OldPass123!",
-  "new_password": "NewSecure123!"
-}
-```
-
-### Query Parameter Validation
-
-**Pagination:**
-
-- `page`: Positive integer (default: 1)
-- `limit`: 1-100 (default: 10)
-
-**Sorting:**
-
-- `sortBy`: Field name (optional)
-- `sortOrder`: "asc" | "desc" (default: "asc")
-
-**Search:**
-
-- `q` or `search`: Min 1 char when provided
-
-**Date Range:**
-
-- `startDate`: ISO 8601 date (optional)
-- `endDate`: ISO 8601 date (optional)
-
----
-
-## Error Handling
-
-### Error Response Structure
-
-All errors follow a consistent structure:
-
-```json
-{
-	"success": false,
-	"message": "Error message",
-	"data": null,
-	"errors": {} // Optional validation errors
-}
-```
-
-### HTTP Status Codes
-
-| Code    | Meaning               | When It Occurs                    |
-| ------- | --------------------- | --------------------------------- |
-| **200** | OK                    | Successful request                |
-| **201** | Created               | Resource created successfully     |
-| **400** | Bad Request           | Invalid request format            |
-| **401** | Unauthorized          | Missing or invalid authentication |
-| **403** | Forbidden             | Insufficient permissions          |
-| **404** | Not Found             | Resource not found                |
-| **422** | Unprocessable Entity  | Validation errors                 |
-| **429** | Too Many Requests     | Rate limit exceeded               |
-| **500** | Internal Server Error | Server error                      |
-| **503** | Service Unavailable   | Service temporarily unavailable   |
-
-### Validation Errors (422)
-
-Validation errors include detailed field-level error messages:
-
-```json
-{
-	"success": false,
-	"message": "Validation Error",
-	"data": null,
-	"errors": {
-		"email": ["Must be a valid email address", "Email is already in use"],
-		"password": [
-			"Password must be at least 8 characters",
-			"Password must contain uppercase, lowercase, number, and special character"
-		],
-		"name": ["Name must be at least 3 characters"]
-	}
-}
-```
-
-### Authentication Errors (401)
-
-```json
-{
-	"success": false,
-	"message": "Unauthorized",
-	"data": null,
-	"errors": ["Invalid or expired token"]
-}
-```
-
-### Permission Errors (403)
-
-```json
-{
-	"success": false,
-	"message": "Forbidden",
-	"data": null,
-	"errors": ["Insufficient permissions to access this resource"]
-}
-```
-
----
+Both routes do not exist when the flag is off (the default).
 
 ## Authentication
 
-### Obtaining Tokens
+1. `POST /auth/login` with `{ email, password }` returns `{ user, accessToken, refreshToken }`.
+2. Send `Authorization: Bearer <accessToken>` on protected routes. Access tokens live **1 day**.
+3. When it expires, `POST /auth/refresh` with `{ refreshToken }` returns a new
+   `{ accessToken, refreshToken }`. Refresh tokens live **7 days**.
 
-1. **Register** (if new user)
-2. **Verify email** (check inbox)
-3. **Login** to receive JWT token
+A refresh token is rejected as a bearer token, and an access token is rejected by `/auth/refresh`.
+Each refresh token carries an id (`jti`) stored in Redis at `refresh_token:<userId>`; only the
+latest one is accepted. `/auth/refresh` and login rotate it (the previous refresh token is rejected
+from then on), and a password change (`PATCH /profile/password`), password reset, admin password reset, user delete, and a user update that leaves the status anything but `active` revoke it, so the user must log in again.
 
-### Using Tokens
+## Envelope
 
-Include JWT in Authorization header:
+`status` in the body always equals the HTTP status.
 
-```http
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```jsonc
+// success
+{ "status": 200, "success": true, "message": "User detail retrieved", "data": { } }
+
+// list
+{
+  "status": 200, "success": true, "message": "...",
+  "data": { "data": [ ], "meta": { "page": 1, "limit": 10, "totalCount": 42 } }
+}
+
+// 400 / 422
+{ "status": 422, "success": false, "message": "Validation failed",
+  "errors": [ { "field": "email", "message": "Email is already registered" } ] }
+
+// 401 / 403 / 404 / 500
+{ "status": 403, "success": false, "message": "Forbidden", "data": null }
+
+// 429
+{ "status": 429, "success": false, "message": "Too many requests" }
 ```
 
-### Token Expiration
+Response field names are camelCase (`createdAt`, `updatedAt`, `isAssigned`). `status` enum values
+are lowercase: `active`, `inactive`, `suspended`, `blocked`.
 
-- Access tokens expire after 24 hours (default)
-- Implement token refresh logic
-- Handle 401 responses by redirecting to login
+## Route map
 
-### Security Best Practices
+"Auth" means a bearer access token is required. Permission strings are `<group> <action>`.
 
-1. **Store tokens securely** (httpOnly cookies or secure storage)
-2. **Use HTTPS** in production
-3. **Never expose tokens in URLs**
-4. **Clear tokens on logout**
-5. **Implement token refresh**
+| Method | Path                                             | Auth | Guard               | Body                                                                  | Success                                                                          |
+| ------ | ------------------------------------------------ | ---- | ------------------- | --------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| GET    | `/`                                              | no   | —                   | —                                                                     | 200 `{ appName, appEnv, date }`                                                  |
+| GET    | `/health`                                        | no   | —                   | —                                                                     | 200 `{ status, timestamp, services: { database, redis } }`; 503 if a probe fails |
+| GET    | `/live`                                          | no   | —                   | —                                                                     | 200 `{ alive: true }`                                                            |
+| POST   | `/auth/login`                                    | no   | —                   | `email`, `password`                                                   | 200 `{ user, accessToken, refreshToken }`                                        |
+| POST   | `/auth/refresh`                                  | no   | —                   | `refreshToken`                                                        | 200 `{ accessToken, refreshToken }`                                              |
+| POST   | `/auth/register`                                 | no   | —                   | `name` (1-255), `email`, `password` (strong)                          | 201 `null`                                                                       |
+| POST   | `/auth/resend-verification`                      | no   | —                   | `email`                                                               | 200 `null` (always)                                                              |
+| POST   | `/auth/verify-email`                             | no   | —                   | `token`                                                               | 200 `null`                                                                       |
+| POST   | `/auth/forgot-password`                          | no   | —                   | `email`                                                               | 200 `null` (always)                                                              |
+| POST   | `/auth/reset-password`                           | no   | —                   | `token`, `newPassword` (strong)                                       | 200 `null`                                                                       |
+| GET    | `/profile`                                       | yes  | —                   | —                                                                     | 200 `UserInformation`                                                            |
+| PATCH  | `/profile`                                       | yes  | —                   | `name`, `email`                                                       | 200 `UserInformation`                                                            |
+| PATCH  | `/profile/password`                              | yes  | —                   | `currentPassword`, `newPassword` (strong)                             | 200 `null`                                                                       |
+| GET    | `/settings/users`                                | yes  | `user list`         | query                                                                 | 200 paginated `UserList`                                                         |
+| POST   | `/settings/users`                                | yes  | `user create`       | `name`, `email`, `password`, `status`, `remark` (nullable), `roleIds` | 201 `null`                                                                       |
+| GET    | `/settings/users/{id}`                           | yes  | `user detail`       | —                                                                     | 200 `UserDetail`                                                                 |
+| PATCH  | `/settings/users/{id}`                           | yes  | `user edit`         | `name`, `email`, `status`, `remark`, `roleIds` (all required)         | 200 `null`                                                                       |
+| POST   | `/settings/users/{id}/reset-password`            | yes  | role `superuser`    | `newPassword`                                                         | 200 `null`                                                                       |
+| POST   | `/settings/users/{id}/send-verification-email`   | yes  | `user create`       | —                                                                     | 200 `null`                                                                       |
+| POST   | `/settings/users/{id}/send-reset-password-email` | yes  | `user create`       | —                                                                     | 200 `null`                                                                       |
+| DELETE | `/settings/users/{id}`                           | yes  | `user delete`       | —                                                                     | 200 `null` (soft delete)                                                         |
+| GET    | `/settings/roles`                                | yes  | `role list`         | query                                                                 | 200 paginated `RoleList`                                                         |
+| POST   | `/settings/roles`                                | yes  | `role create`       | `name`, `permissionIds`                                               | 201 `null`                                                                       |
+| GET    | `/settings/roles/{id}`                           | yes  | `role detail`       | —                                                                     | 200 `RoleDetail`                                                                 |
+| PATCH  | `/settings/roles/{id}`                           | yes  | `role edit`         | `name`, `permissionIds`                                               | 200 `null`                                                                       |
+| DELETE | `/settings/roles/{id}`                           | yes  | `role delete`       | —                                                                     | 200 `null`                                                                       |
+| GET    | `/settings/permissions`                          | yes  | `permission list`   | query                                                                 | 200 paginated `PermissionList`                                                   |
+| POST   | `/settings/permissions`                          | yes  | `permission create` | `name` (string[] of actions), `group`                                 | 201 `null`, stores `"<group> <name>"` each                                       |
+| GET    | `/settings/permissions/{id}`                     | yes  | `permission detail` | —                                                                     | 200 `PermissionList`                                                             |
+| PATCH  | `/settings/permissions/{id}`                     | yes  | `permission edit`   | `name` (full `"<group> <action>"`), `group`                           | 200 `null`                                                                       |
+| DELETE | `/settings/permissions/{id}`                     | yes  | `permission delete` | —                                                                     | 200 `null`                                                                       |
+| GET    | `/settings/select-options/permissions`           | yes  | role `superuser`    | —                                                                     | 200 `[{ group, permissions: [{ id, name, group }] }]`                            |
+| GET    | `/settings/select-options/roles`                 | yes  | role `superuser`    | —                                                                     | 200 `[{ id, name }]`, excluding `superuser`, by name                             |
 
----
+Guards are AND across a list, and `superuser` passes every guard. `{id}` must be a uuid (422
+otherwise). `PATCH /settings/permissions/{id}` stores `name` verbatim while `POST` prefixes the group,
+so an update sends the full `"<group> <action>"` string.
 
-## SDK Generation
+## Data shapes
 
-Generate client SDKs from OpenAPI spec:
+- `UserInformation` — `{ id, name, email, roles: string[], permissions: string[] }`
+- `UserList` — `{ id, name, email, status, remark, roles: string[], createdAt, updatedAt }`
+- `UserDetail` — `{ id, name, email, status, remark, roles: [{ id, name }], createdAt, updatedAt }`
+- `RoleList` — `{ id, name, createdAt, updatedAt }`
+- `RoleDetail` — `RoleList` + `permissions: [{ group, names: [{ id, name, isAssigned }] }]`, every
+  permission in the system grouped, with `isAssigned` for this role
+- `PermissionList` — `{ id, name, group, createdAt, updatedAt }`
 
-### TypeScript/JavaScript
+## List query parameters
+
+| Param                   | Default     | Invalid                                            |
+| ----------------------- | ----------- | -------------------------------------------------- |
+| `page`                  | `1`         | < 1 or not a number: 422                           |
+| `perPage`               | `10`        | < 1 or not a number: 422                           |
+| `search`                | —           | case-insensitive match over the searchable columns |
+| `sort`                  | `createdAt` | not in the allow-list: 422                         |
+| `sortDirection`         | `desc`      | not `asc` / `desc`: 422                            |
+| `filter[<key>]=<value>` | —           | unknown key or bad value: 400                      |
+
+Filters are separate flat query parameters, not JSON: `?filter[status]=active&filter[name]=jane`.
+Every filter is ANDed.
+
+| Kind  | Comma means     | Match                                                              |
+| ----- | --------------- | ------------------------------------------------------------------ |
+| enum  | several values  | any of them, each checked against the enum                         |
+| id    | several uuids   | any of them                                                        |
+| date  | `start,end`     | inclusive whole days in `APP_TIMEZONE`; one date is that whole day |
+| plain | a literal comma | case-insensitive contains                                          |
+
+| Resource    | Sort                                                      | Filter                                                                                  | Search                    |
+| ----------- | --------------------------------------------------------- | --------------------------------------------------------------------------------------- | ------------------------- |
+| users       | `id`, `name`, `email`, `status`, `createdAt`, `updatedAt` | `status` (enum), `name`, `email`, `roleId` (id), `createdAt` (date), `updatedAt` (date) | `name`, `email`, `status` |
+| roles       | `id`, `name`, `createdAt`, `updatedAt`                    | `name`, `createdAt` (date), `updatedAt` (date)                                          | `name`                    |
+| permissions | `id`, `name`, `group`, `createdAt`, `updatedAt`           | `name`, `group`, `createdAt` (date), `updatedAt` (date)                                 | `name`, `group`           |
+
+Soft-deleted users never appear in lists or lookups.
+
+## Status codes
+
+| Case                                                                                   | Status                           |
+| -------------------------------------------------------------------------------------- | -------------------------------- |
+| Missing, invalid, expired, or wrong-type bearer; user inactive or deleted              | 401                              |
+| Guard refuses                                                                          | 403                              |
+| `{id}` not found                                                                       | 404                              |
+| Request shape, bad `sort` / `sortDirection`, malformed uuid                            | 422                              |
+| Duplicate email (register, user create/update, profile), role name, or permission name | 422                              |
+| Unknown filter key or bad filter value                                                 | 400                              |
+| Login failure (unknown email, wrong password, unverified, not active)                  | 400, `errors[0].field = "email"` |
+| Invalid, expired, or used verification / reset token                                   | 400, `errors[0].field = "token"` |
+| Rate limited                                                                           | 429                              |
+
+Login answers an unknown email and a wrong password with the same message, after a constant-time
+password check, so it does not reveal which addresses are registered.
+
+## Examples
 
 ```bash
-npx openapi-typescript-codegen --input openapi.json --output ./client
-```
-
-### Python
-
-```bash
-openapi-generator-cli generate -i openapi.json -g python -o ./client
-```
-
-### Other Languages
-
-- Java
-- Go
-- Ruby
-- PHP
-- C#
-
-Visit [OpenAPI Generator](https://openapi-generator.tech/) for more options.
-
----
-
-## Testing the API
-
-### Using cURL
-
-```bash
-# Register
-curl -X POST http://localhost:3000/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"name":"John Doe","email":"john@example.com","password":"SecurePass123!"}'
-
-# Login
 curl -X POST http://localhost:3000/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"john@example.com","password":"SecurePass123!"}'
+  -d '{"email":"superuser@example.com","password":"S3crEtP4ssw0rd!"}'
 
-# Get Profile (with token)
-curl -X GET http://localhost:3000/profile \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+curl "http://localhost:3000/settings/users?page=1&perPage=10&sort=name&sortDirection=asc&filter[status]=active" \
+  -H "Authorization: Bearer <accessToken>"
+
+curl -X POST http://localhost:3000/auth/refresh \
+  -H "Content-Type: application/json" \
+  -d '{"refreshToken":"<refreshToken>"}'
 ```
-
-### Using Postman
-
-1. Import OpenAPI spec from `/openapi.json`
-2. Set up environment variables for base URL and token
-3. Use collection runner for automated testing
-
-### Using the Interactive Docs
-
-Visit `http://localhost:3000/docs` and:
-
-1. Browse endpoints
-2. Click "Try it out"
-3. Fill in parameters
-4. Execute request
-5. View response
-
----
-
-## Support
-
-For API questions and support:
-
-- **Documentation**: This guide and `/docs`
-- **OpenAPI Spec**: `/openapi.json`
-- **Security**: See `SECURITY.md`
-- **Issues**: GitHub Issues
-
----
-
-**Last Updated**: February 8, 2026  
-**Version**: 1.0.0
