@@ -39,6 +39,9 @@ export class RoleService implements IRoleService {
    - profile update → that user (re-cache the fresh value),
    - role update or delete → every user holding the role,
    - permission update or delete → every user holding a role that grants it.
+   Every role or permission create, update or delete also calls `forgetSelectOptions()` (`@cache`):
+   `SelectOptionsService` caches both option lists for 3600 s. A direct database write (the seeder,
+   `make fresh`) does not, so those lists can lag by up to an hour until Redis is flushed.
    Writes that must also end the user's sessions call `revokeSessions(userId)` (`@cache`) instead,
    which deletes the cached identity **and** the stored refresh-token id: password change, password
    reset, admin password reset, user delete, and a user update that sets a non-`active` status.

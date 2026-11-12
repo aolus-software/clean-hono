@@ -144,7 +144,23 @@ bun run format:check
 bun run typecheck
 ```
 
-There is no test runner configured yet.
+## Tests
+
+Bun's built-in runner (`bun test`), configured in `bunfig.toml`. `tests/unit/` needs nothing running;
+`tests/integration/` drives the app through `app.request` against a real PostgreSQL and Redis. The
+integration helpers migrate, truncate and re-seed the database, so they refuse any database whose name
+does not end in `_test`. Redis uses db `15` (`TEST_REDIS_DB`) and is flushed. Mail jobs are captured
+in memory, never queued.
+
+```sh
+docker compose up -d postgres redis
+docker compose exec postgres createdb -U postgres hono_clean_test
+TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5432/hono_clean_test bun run test
+```
+
+`bun run test:coverage` writes `coverage/lcov.info` and fails when total line coverage drops below
+65% (`tests/coverage-gate.ts`). That is the current baseline, raised as tests land. CI runs it with
+PostgreSQL and Redis services.
 
 ## API Documentation
 
@@ -171,6 +187,14 @@ and the spec at `/docs/openapi.json`. The route map, envelope, and list-query ru
 - `bun run lint` / `bun run lint:fix`
 - `bun run format` / `bun run format:check`
 - `bun run typecheck`
+
+### Tests
+
+- `bun run test` — every test (integration needs `TEST_DATABASE_URL` and Redis)
+- `bun run test:watch` — rerun on change
+- `bun run test:unit` — `tests/unit` only, no database
+- `bun run test:integration` — `tests/integration` only
+- `bun run test:coverage` — every test with coverage, 65% total line gate
 
 ### Database (PostgreSQL/Drizzle)
 
@@ -199,6 +223,10 @@ and the spec at `/docs/openapi.json`. The route map, envelope, and list-query ru
 | `lint` / `lint-fix`     | ESLint                                             |
 | `format`                | Prettier                                           |
 | `typecheck`             | `tsc --noEmit`                                     |
+| `test`                  | every test                                         |
+| `test-unit`             | unit tests, no database                            |
+| `test-integration`      | integration tests against `TEST_DATABASE_URL`      |
+| `test-coverage`         | every test with the 65% total line gate            |
 | `db-generate`           | `drizzle-kit generate`                             |
 | `db-migrate`            | `drizzle-kit migrate`                              |
 | `db-push`               | `drizzle-kit push`                                 |

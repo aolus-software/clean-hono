@@ -1,4 +1,4 @@
-import { forgetUserInformation } from "@cache";
+import { forgetSelectOptions, forgetUserInformation } from "@cache";
 import {
 	db,
 	PermissionRepository,
@@ -29,6 +29,7 @@ export class RoleService implements IRoleService {
 		await db.transaction(async (tx) => {
 			await RoleRepository(tx).create(data);
 		});
+		await forgetSelectOptions();
 	}
 
 	async findOne(id: string): Promise<RoleDetail> {
@@ -46,6 +47,7 @@ export class RoleService implements IRoleService {
 			await RoleRepository(tx).update(id, data);
 		});
 		await forgetUserInformation(await UserRepository().findIdsByRoleIds([id]));
+		await forgetSelectOptions();
 	}
 
 	async delete(id: string): Promise<void> {
@@ -53,6 +55,7 @@ export class RoleService implements IRoleService {
 		const holders = await UserRepository().findIdsByRoleIds([id]);
 		await RoleRepository().delete(id);
 		await forgetUserInformation(holders);
+		await forgetSelectOptions();
 	}
 
 	private async findExisting(id: string): Promise<RoleList> {

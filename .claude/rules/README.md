@@ -46,6 +46,7 @@ Ordered outside-in, the way a request travels.
 | [rate-limiting.md](./rate-limiting.md)           | The global limiter; credential endpoints never loosened       |
 | [imports-and-naming.md](./imports-and-naming.md) | Aliases, import order, file and symbol naming                 |
 | [commit.md](./commit.md)                         | Conventional Commits and the pre-commit hook                  |
+| [testing.md](./testing.md)                       | `bun test` layout, the `_test` database guard, mocked mail    |
 
 ## How to use
 

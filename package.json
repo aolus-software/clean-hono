@@ -28,6 +28,11 @@
 		"db:clickhouse:migrate": "bun run src/libs/database/clickhouse/scripts/migrate.ts migrate",
 		"db:clickhouse:status": "bun run src/libs/database/clickhouse/scripts/migrate.ts status",
 		"typecheck": "tsc --noEmit",
+		"test": "bun test",
+		"test:watch": "bun test --watch",
+		"test:unit": "bun test tests/unit",
+		"test:integration": "bun test tests/integration",
+		"test:coverage": "bun test --coverage && bun run tests/coverage-gate.ts",
 		"i18n:keys": "bun run src/libs/i18n/scripts/generate-keys.ts"
 	},
 	"dependencies": {
