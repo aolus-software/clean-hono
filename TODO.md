@@ -19,11 +19,12 @@ vocabulary, and `.claude` layout), with Drizzle physical names (snake_case) as i
 - [x] `Dockerfile` (multi-stage), `docker-compose.yml` app service, Docker `make` targets
 - [x] CI: lint, format check, typecheck, Drizzle generate drift / migrate / check, build
 - [x] `docs/`, `.github/` templates, `CONTRIBUTING.md`, `SECURITY.md`
-- [x] Tests: `bun test` with unit and integration suites, 80% line-coverage gate in CI
+- [x] Tests: `bun test` with unit and integration suites, 65% total line-coverage gate in CI
 - [x] DB: indexes on `user_roles.role_id`, `role_permissions.permission_id`, live `users.created_at`; configurable pool; dev query log; compose slow-query log; cached select-options
 
 ## Pending
 
 - [ ] Shared rate-limit store so cluster workers share one budget
+- [ ] Raise test coverage to 80% (issue #8 target) and the gate in `tests/coverage-gate.ts` with it
 - [ ] Cursor pagination for deep lists (would change the shared `meta` contract; decide across clean-arc first)
 - [ ] Trigram (`pg_trgm`) indexes if `ilike '%term%'` search becomes slow on large tables

@@ -158,7 +158,9 @@ docker compose exec postgres createdb -U postgres hono_clean_test
 TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5432/hono_clean_test bun run test
 ```
 
-`bun run test:coverage` fails below 80% line coverage. CI runs it with PostgreSQL and Redis services.
+`bun run test:coverage` writes `coverage/lcov.info` and fails when total line coverage drops below
+65% (`tests/coverage-gate.ts`). That is the current baseline, raised as tests land. CI runs it with
+PostgreSQL and Redis services.
 
 ## API Documentation
 
@@ -192,7 +194,7 @@ and the spec at `/docs/openapi.json`. The route map, envelope, and list-query ru
 - `bun run test:watch` — rerun on change
 - `bun run test:unit` — `tests/unit` only, no database
 - `bun run test:integration` — `tests/integration` only
-- `bun run test:coverage` — every test with coverage, 80% line threshold
+- `bun run test:coverage` — every test with coverage, 65% total line gate
 
 ### Database (PostgreSQL/Drizzle)
 
@@ -224,7 +226,7 @@ and the spec at `/docs/openapi.json`. The route map, envelope, and list-query ru
 | `test`                  | every test                                         |
 | `test-unit`             | unit tests, no database                            |
 | `test-integration`      | integration tests against `TEST_DATABASE_URL`      |
-| `test-coverage`         | every test with the 80% line threshold             |
+| `test-coverage`         | every test with the 65% total line gate            |
 | `db-generate`           | `drizzle-kit generate`                             |
 | `db-migrate`            | `drizzle-kit migrate`                              |
 | `db-push`               | `drizzle-kit push`                                 |

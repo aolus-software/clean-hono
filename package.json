@@ -32,7 +32,7 @@
 		"test:watch": "bun test --watch",
 		"test:unit": "bun test tests/unit",
 		"test:integration": "bun test tests/integration",
-		"test:coverage": "bun test --coverage",
+		"test:coverage": "bun test --coverage && bun run tests/coverage-gate.ts",
 		"i18n:keys": "bun run src/libs/i18n/scripts/generate-keys.ts"
 	},
 	"dependencies": {

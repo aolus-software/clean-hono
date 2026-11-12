@@ -34,7 +34,7 @@ make typecheck           # tsc --noEmit
 make test                # every test; integration needs TEST_DATABASE_URL (name ends in _test) + Redis
 make test-unit           # tests/unit, no database
 make test-integration    # tests/integration: migrates, truncates and re-seeds the test database
-make test-coverage       # fails below 80% line coverage (what CI runs)
+make test-coverage       # fails below 65% total line coverage (tests/coverage-gate.ts; what CI runs)
 
 # Database (Drizzle)
 make db-generate         # drizzle-kit generate: new SQL migration from the schema

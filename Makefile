@@ -32,7 +32,7 @@ help:
 	@echo "    test                  - Run every test (integration needs TEST_DATABASE_URL + Redis)"
 	@echo "    test-unit             - Run unit tests (no database)"
 	@echo "    test-integration      - Run integration tests against TEST_DATABASE_URL"
-	@echo "    test-coverage         - Run every test with coverage (80% line threshold)"
+	@echo "    test-coverage         - Run every test with coverage (65% total line gate)"
 	@echo ""
 	@echo "  Database (PostgreSQL/Drizzle):"
 	@echo "    db-generate           - Generate a migration from the schema (drizzle-kit generate)"

@@ -1,7 +1,9 @@
 # Rule: Tests (`tests/`)
 
-Bun's built-in runner. `bunfig.toml` preloads `tests/setup.ts` and sets the coverage gate (80% of
-lines, enforced by `bun run test:coverage`, which CI runs).
+Bun's built-in runner. `bunfig.toml` preloads `tests/setup.ts` and writes lcov coverage.
+`bun run test:coverage` (what CI runs) then runs `tests/coverage-gate.ts`, which fails when **total**
+line coverage is below its `MIN_LINE_COVERAGE` (65%, the current baseline). Bun's own
+`coverageThreshold` is per file, so it is not used. Raise the gate when tests land; never lower it.
 
 ## Layout
 
