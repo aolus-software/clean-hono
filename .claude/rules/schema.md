@@ -45,6 +45,11 @@ three and needs a migration.
 - `users_email_unique_live` — a **partial unique index** on `email WHERE deleted_at IS NULL`. Live
   emails are unique at the database level, a soft-deleted user's email is reusable, and the service's
   `findLiveByEmail` check still runs first so the caller gets a 422 rather than a constraint error.
+- `users_created_at_live_index` — partial index on `created_at WHERE deleted_at IS NULL`, the default
+  user list order.
+- `user_roles_role_id_index` and `role_permissions_permission_id_index` — the composite primary keys
+  lead with `user_id` / `role_id`, so lookups by the second column ("who holds this role", "which roles
+  grant this permission", and the `ON DELETE CASCADE` from `roles` / `permissions`) need their own.
 - `roles_name_unique`, `permissions_name_unique`.
 
 ## Foreign keys

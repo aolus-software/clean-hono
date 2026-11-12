@@ -1,0 +1,5 @@
+[test]
+preload = ["./tests/setup.ts"]
+coverageSkipTestFiles = true
+coverageThreshold = { lines = 0.8 }
+coveragePathIgnorePatterns = ["tests/**", "src/libs/database/**/scripts/**", "src/libs/database/seed/**"]

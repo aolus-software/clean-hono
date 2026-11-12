@@ -98,4 +98,4 @@ or config** — its only output is the findings document.
 - **Writing format is governed by `.claude/rules/audit-findings.md`.**
 - **Prefer updating the existing `docs/audit-findings.md`** over a new file. Never renumber.
 - **Cite `file:line` for every finding.**
-- **There is no test runner configured.** Do not report test results.
+- **Tests are not part of the sweep.** Do not run them or report their results; `testing.md` covers them.

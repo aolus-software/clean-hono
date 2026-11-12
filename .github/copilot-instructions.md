@@ -162,7 +162,7 @@ export function UserRepository(tx?: DbTransaction) {
 
 ## Testing
 
-- There is no test runner configured yet. Do not add test commands to docs or CI without adding the runner and tests.
+- Tests use `bun test` (`tests/unit`, `tests/integration`). Integration tests need `TEST_DATABASE_URL` pointing at a database whose name ends in `_test`, plus Redis.
 
 ## Git Commits
 

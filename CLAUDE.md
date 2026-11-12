@@ -30,8 +30,11 @@ make format              # prettier --write
 bun run format:check     # prettier --check (what CI runs)
 make typecheck           # tsc --noEmit
 
-# Tests
-# There is no test runner. Do not invent `bun test` commands.
+# Tests (bun test, bunfig.toml preloads tests/setup.ts)
+make test                # every test; integration needs TEST_DATABASE_URL (name ends in _test) + Redis
+make test-unit           # tests/unit, no database
+make test-integration    # tests/integration: migrates, truncates and re-seeds the test database
+make test-coverage       # fails below 80% line coverage (what CI runs)
 
 # Database (Drizzle)
 make db-generate         # drizzle-kit generate: new SQL migration from the schema
@@ -99,6 +102,10 @@ workers) or `src/server.ts` (`Bun.serve` on `app.fetch`, imports `@bull`); `src/
 - **`UserInformation` is cached** at `UserInformationCacheKey(id)` for 3600 s. The DB read requires
   `status = 'active'` and `deleted_at IS NULL`. Every write that changes a user's status, roles, profile,
   password or deletion, and every role/permission update or delete, deletes the affected keys.
+- **Select-option lists are cached** at `PermissionSelectOptionsCacheKey()` / `RoleSelectOptionsCacheKey()`
+  for 3600 s; every role or permission write calls `forgetSelectOptions()`.
+- **The pool is per process** (`DB_POOL_*`); `DB_LOG_QUERIES=true` logs statements at `debug`, and the
+  compose postgres logs anything slower than `POSTGRES_SLOW_QUERY_MS`.
 - **Repositories are factories**: `UserRepository()` or `UserRepository(tx)`. Reads return `null`; the
   service throws `NotFoundError`. Lists validate sort and filter keys against exported allow-lists
   (400 for an unknown filter key, 422 for a bad `sort`), and `filter[<key>]` params are read off the
@@ -160,6 +167,6 @@ Two rules apply to every change: `.claude/rules/contradiction-halt.md` and
 - `.claude/skills` is a symlink to `../.agents/skills`, a vendored bundle (workflow skills plus
   `hono`); `.agents/skills/README.md` indexes it. `skills-lock.json` is
   gitignored.
-- `.claude/rules/` — 26 rules, indexed with their scope in `.claude/rules/README.md`.
+- `.claude/rules/` — 27 rules, indexed with their scope in `.claude/rules/README.md`.
 - `.claude/commands/` — `/commit`, `/audit-flow` (read-only sweep writing `docs/audit-findings.md`),
   `/update-todo` (reconciles `TODO.md`).

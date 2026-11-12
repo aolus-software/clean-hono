@@ -49,13 +49,28 @@ Generate each with `openssl rand -base64 48`. Token lifetimes are fixed in code
 
 ## Database
 
-| Variable       | Type   | Default                                                    | Notes                                                  |
-| -------------- | ------ | ---------------------------------------------------------- | ------------------------------------------------------ |
-| `DATABASE_URL` | string | `postgresql://postgres:postgres@localhost:5432/hono_clean` | Read by the app and by `drizzle.config.ts` for the CLI |
+| Variable                        | Type   | Default                                                    | Notes                                                                                     |
+| ------------------------------- | ------ | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                  | string | `postgresql://postgres:postgres@localhost:5432/hono_clean` | Read by the app and by `drizzle.config.ts` for the CLI                                    |
+| `DB_POOL_MAX`                   | number | `10`                                                       | Pool size per process; must be at least 1. Cluster mode multiplies it by the worker count |
+| `DB_POOL_IDLE_TIMEOUT_MS`       | number | `30000`                                                    | An idle connection is closed after this long                                              |
+| `DB_POOL_CONNECTION_TIMEOUT_MS` | number | `5000`                                                     | A request waiting for a free connection fails after this long                             |
+| `DB_LOG_QUERIES`                | bool   | `false`                                                    | Drizzle logs each statement at `debug` (text and parameter count, never parameter values) |
 
-`POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` in `.env.example` are read only by
-`docker-compose.yml` to provision the container. Keep them in sync with `DATABASE_URL`. Inside the
+`POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` and `POSTGRES_SLOW_QUERY_MS` (default `100`;
+statements slower than this many milliseconds go to the container log, `-1` disables) in
+`.env.example` are read only by `docker-compose.yml` to provision the container. Keep them in sync with `DATABASE_URL`. Inside the
 compose network the host is `postgres`, not `localhost`.
+
+## Tests
+
+Read only by `tests/setup.ts` under `bun test`, which also pins `NODE_ENV`, `LOG_LEVEL` and throwaway
+JWT secrets.
+
+| Variable            | Type   | Default                                                         | Notes                                                     |
+| ------------------- | ------ | --------------------------------------------------------------- | --------------------------------------------------------- |
+| `TEST_DATABASE_URL` | string | `postgresql://postgres:postgres@localhost:5432/hono_clean_test` | Replaces `DATABASE_URL`; the name must end in `_test`     |
+| `TEST_REDIS_DB`     | number | `15`                                                            | Replaces `REDIS_DB`; flushed before each integration file |
 
 ## Redis
 
